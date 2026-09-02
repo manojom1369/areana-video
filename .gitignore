@@ -1,0 +1,20 @@
+# media + generated artifacts stay out of git (transferred via git blobs / actions instead)
+input/
+output/
+work/
+models/
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.mp3
+*.m4a
+!docs/**/*.jpg
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# node
+node_modules/

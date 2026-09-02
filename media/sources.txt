@@ -1,0 +1,3 @@
+# One Google Drive share URL per line; the first non-comment line is fetched
+# by .github/workflows/fetch-drive-media.yml
+https://drive.google.com/file/d/1077YL5wjxqvB2nuC6e5eefO4K8xuvtm1/view?usp=sharing
