@@ -4,6 +4,8 @@ name: fetch-drive-media
 # api.github.com. This workflow downloads the shared Drive file and stores
 # it as dangling git blobs (no commit, nothing lands in history), then
 # commits a tiny manifest so the sandbox knows which blob SHAs to fetch.
+# Diagnostics are also committed (media/status.txt) because the sandbox
+# cannot read Actions logs (they are served from blob storage it can't reach).
 
 on:
   push:
@@ -38,32 +40,74 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install gdown + requests
-        run: pip install --quiet gdown requests
+      - name: Install deps
+        run: |
+          pip install --quiet gdown requests
+          sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1 || true
 
-      - name: Download from Google Drive
+      - name: Download from Google Drive (multi-strategy)
+        id: dl
+        continue-on-error: true
         env:
           INPUT_URL: ${{ github.event.inputs.url }}
         run: |
-          set -euo pipefail
-          mkdir -p dl
-          if [ -n "${INPUT_URL}" ]; then
-            URL="${INPUT_URL}"
-          else
-            URL="$(grep -v '^\s*#' media/sources.txt | grep -m1 . )"
+          set -uo pipefail
+          mkdir -p dl media
+          : > media/status.txt
+          log() { echo "$*" | tee -a media/status.txt; }
+          if [ -n "${INPUT_URL}" ]; then URL="${INPUT_URL}"; else URL="$(grep -v '^\s*#' media/sources.txt | grep -m1 .)"; fi
+          FID="$(echo "$URL" | sed -nE 's#.*/d/([A-Za-z0-9_-]+).*#\1#p')"
+          [ -z "$FID" ] && FID="$(echo "$URL" | sed -nE 's#.*[?&]id=([A-Za-z0-9_-]+).*#\1#p')"
+          [ -z "$FID" ] && FID="$URL"
+          log "url=$URL"
+          log "file_id=$FID"
+
+          ok=0
+          # Strategy 1: gdown fuzzy
+          log "--- strategy 1: gdown"
+          if gdown --fuzzy "$URL" -O dl/source.bin 2>&1 | tail -n 20 | tee -a media/status.txt; then
+            [ -s dl/source.bin ] && ok=1
           fi
-          echo "Fetching: ${URL}"
-          gdown --fuzzy "${URL}" -O dl/source.bin
-          ls -la dl
-          file dl/source.bin || true
-          python3 - <<'EOF'
-          import hashlib, os
-          p = "dl/source.bin"
-          h = hashlib.sha256(open(p, "rb").read()).hexdigest()
-          print("size", os.path.getsize(p), "sha256", h)
-          EOF
+          # Strategy 2: gdown by id
+          if [ $ok -eq 0 ]; then
+            log "--- strategy 2: gdown --id"
+            rm -f dl/source.bin
+            gdown --id "$FID" -O dl/source.bin 2>&1 | tail -n 20 | tee -a media/status.txt
+            [ -s dl/source.bin ] && ok=1
+          fi
+          # Strategy 3: raw curl with confirm token (usercontent endpoint)
+          if [ $ok -eq 0 ]; then
+            log "--- strategy 3: curl usercontent"
+            rm -f dl/source.bin
+            curl -sSL -c dl/c.txt -b dl/c.txt "https://drive.usercontent.google.com/download?id=${FID}&export=download&confirm=t" -o dl/source.bin -w "http=%{http_code} ct=%{content_type} size=%{size_download}\n" | tee -a media/status.txt
+            if head -c 512 dl/source.bin | grep -qi "<html"; then
+              log "got html page instead of file:"
+              head -c 4000 dl/source.bin | tr -d '\r' | grep -oiE "(quota|virus|cannot|denied|sign in|access|too many users|download anyway|uc-download-link[^>]*)" | sort -u | head -n 10 | tee -a media/status.txt
+              # try to extract the confirm form and re-submit
+              CONFIRM=$(grep -oE 'name="confirm" value="[^"]+"' dl/source.bin | head -1 | sed -E 's/.*value="([^"]+)"/\1/')
+              UUID=$(grep -oE 'name="uuid" value="[^"]+"' dl/source.bin | head -1 | sed -E 's/.*value="([^"]+)"/\1/')
+              log "confirm=$CONFIRM uuid=$UUID"
+              if [ -n "$UUID" ]; then
+                curl -sSL -c dl/c.txt -b dl/c.txt "https://drive.usercontent.google.com/download?id=${FID}&export=download&confirm=${CONFIRM:-t}&uuid=${UUID}" -o dl/source.bin -w "http=%{http_code} ct=%{content_type} size=%{size_download}\n" | tee -a media/status.txt
+              fi
+            fi
+            if [ -s dl/source.bin ] && ! head -c 512 dl/source.bin | grep -qi "<html"; then ok=1; fi
+          fi
+
+          if [ $ok -eq 1 ]; then
+            log "--- download OK"
+            ls -la dl | tee -a media/status.txt
+            file dl/source.bin | tee -a media/status.txt
+            ffprobe -v error -show_entries format=duration,size,bit_rate:stream=codec_type,codec_name,width,height,r_frame_rate,sample_rate,channels -of default=nw=1 dl/source.bin 2>&1 | tee -a media/status.txt
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          else
+            log "--- ALL STRATEGIES FAILED"
+            rm -f dl/source.bin
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload as chunked git blobs
+        if: steps.dl.outputs.ok == '1'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -99,16 +143,17 @@ jobs:
               lines.append(f"chunk {n} {sha} {len(part)}")
               print(f"chunk {n}: {len(part)} bytes -> blob {sha}")
               n += 1
-          os.makedirs("media", exist_ok=True)
           open("media/manifest.txt", "w").write("\n".join(lines) + "\n")
           print(open("media/manifest.txt").read())
           EOF
 
-      - name: Commit manifest back to the branch
+      - name: Commit manifest/status back to the branch
+        if: always()
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add media/manifest.txt
-          git commit -m "chore(media): add blob manifest for Drive source [skip ci]" || echo "nothing to commit"
+          git add media/status.txt media/manifest.txt 2>/dev/null || git add media/status.txt
+          git commit -m "chore(media): fetch-drive-media run ${{ github.run_id }} [skip ci]" || echo "nothing to commit"
+          git pull --rebase origin ${{ github.ref_name }} || true
           git push origin HEAD:${{ github.ref_name }}
