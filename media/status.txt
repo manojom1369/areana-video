@@ -1,0 +1,14 @@
+url=https://drive.google.com/file/d/1077YL5wjxqvB2nuC6e5eefO4K8xuvtm1/view?usp=sharing
+file_id=1077YL5wjxqvB2nuC6e5eefO4K8xuvtm1
+--- strategy 1: gdown
+usage: gdown [-h] [-V] [-O OUTPUT] [-q] [--proxy PROXY] [--speed SPEED]
+             [--no-cookies] [--no-check-certificate] [--continue] [--folder]
+             [--json] [--format FORMAT] [--user-agent USER_AGENT]
+             url_or_id
+gdown: error: unrecognized arguments: --fuzzy
+--- strategy 2: gdown --id
+usage: gdown [-h] [-V] [-O OUTPUT] [-q] [--proxy PROXY] [--speed SPEED]
+             [--no-cookies] [--no-check-certificate] [--continue] [--folder]
+             [--json] [--format FORMAT] [--user-agent USER_AGENT]
+             url_or_id
+gdown: error: unrecognized arguments: --id
