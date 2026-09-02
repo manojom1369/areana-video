@@ -51,6 +51,7 @@ jobs:
         env:
           INPUT_URL: ${{ github.event.inputs.url }}
         run: |
+          set +e
           set -uo pipefail
           mkdir -p dl media
           : > media/status.txt
@@ -65,14 +66,14 @@ jobs:
           ok=0
           # Strategy 1: gdown fuzzy
           log "--- strategy 1: gdown"
-          if gdown --fuzzy "$URL" -O dl/source.bin 2>&1 | tail -n 20 | tee -a media/status.txt; then
-            [ -s dl/source.bin ] && ok=1
-          fi
+          gdown --version 2>&1 | tee -a media/status.txt
+          gdown "$URL" -O dl/source.bin 2>&1 | tail -n 20 | tee -a media/status.txt
+          [ -s dl/source.bin ] && ok=1
           # Strategy 2: gdown by id
           if [ $ok -eq 0 ]; then
             log "--- strategy 2: gdown --id"
             rm -f dl/source.bin
-            gdown --id "$FID" -O dl/source.bin 2>&1 | tail -n 20 | tee -a media/status.txt
+            gdown "https://drive.google.com/uc?id=${FID}" -O dl/source.bin 2>&1 | tail -n 20 | tee -a media/status.txt
             [ -s dl/source.bin ] && ok=1
           fi
           # Strategy 3: raw curl with confirm token (usercontent endpoint)
