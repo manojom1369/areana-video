@@ -1,14 +1,15 @@
 url=https://drive.google.com/file/d/1077YL5wjxqvB2nuC6e5eefO4K8xuvtm1/view?usp=sharing
 file_id=1077YL5wjxqvB2nuC6e5eefO4K8xuvtm1
 --- strategy 1: gdown
-usage: gdown [-h] [-V] [-O OUTPUT] [-q] [--proxy PROXY] [--speed SPEED]
-             [--no-cookies] [--no-check-certificate] [--continue] [--folder]
-             [--json] [--format FORMAT] [--user-agent USER_AGENT]
-             url_or_id
-gdown: error: unrecognized arguments: --fuzzy
---- strategy 2: gdown --id
-usage: gdown [-h] [-V] [-O OUTPUT] [-q] [--proxy PROXY] [--speed SPEED]
-             [--no-cookies] [--no-check-certificate] [--continue] [--folder]
-             [--json] [--format FORMAT] [--user-agent USER_AGENT]
-             url_or_id
-gdown: error: unrecognized arguments: --id
+gdown 6.1.0 at /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages
+Downloading...
+From: https://drive.google.com/uc?id=1077YL5wjxqvB2nuC6e5eefO4K8xuvtm1
+To: /home/runner/work/areana-video/areana-video/dl/source.bin
+  0%|          | 0.00/3.32M [00:00<?, ?B/s] 63%|██████▎   | 2.10M/3.32M [00:00<00:00, 20.8MB/s]100%|██████████| 3.32M/3.32M [00:00<00:00, 29.6MB/s]
+--- download OK
+total 3248
+drwxr-xr-x 2 runner runner    4096 Sep  2 16:44 .
+drwxr-xr-x 6 runner runner    4096 Sep  2 16:44 ..
+-rw------- 1 runner runner 3317187 Sep  2 12:29 source.bin
+dl/source.bin: ISO Media, MP4 Base Media v1 [ISO 14496-12:2003]
+/home/runner/work/_temp/2e280208-d049-40f4-91b6-71cfc0ab04e2.sh: line 49: ffprobe: command not found
