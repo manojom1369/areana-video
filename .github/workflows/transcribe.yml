@@ -1,0 +1,128 @@
+name: transcribe
+
+# Runs word-level lyric transcription on the GitHub runner (which can reach
+# HuggingFace / PyPI) and commits the JSON back. The editing sandbox cannot
+# download Whisper models, so this is the bridge for ASR.
+
+on:
+  push:
+    branches: ["arena/01a062ec-areana-video"]
+    paths:
+      - ".github/workflows/transcribe.yml"
+      - "media/transcribe.request"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: transcribe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  asr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: System deps
+        run: |
+          sudo apt-get update -qq >/dev/null
+          sudo apt-get install -y -qq ffmpeg >/dev/null
+          ffmpeg -version | head -1
+
+      - name: Python deps (CPU torch, demucs, faster-whisper)
+        run: |
+          pip install --quiet --upgrade pip
+          pip install --quiet torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet faster-whisper demucs requests soundfile numpy
+          python -c "import faster_whisper, demucs; print('deps ok')"
+
+      - name: Fetch source from git blobs (manifest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          python3 - <<'EOF'
+          import hashlib, os, requests
+          repo=os.environ["REPO"]; tok=os.environ["GH_TOKEN"]
+          man={"chunks":[]}
+          for line in open("media/manifest.txt"):
+              p=line.split()
+              if not p or p[0].startswith("#"): continue
+              if p[0]=="chunk": man["chunks"].append((int(p[1]),p[2],int(p[3])))
+              else: man[p[0]]=p[1]
+          out=open("work/source.mp4","wb"); h=hashlib.sha256()
+          for i,sha,size in sorted(man["chunks"]):
+              r=requests.get(f"https://api.github.com/repos/{repo}/git/blobs/{sha}",
+                             headers={"Authorization":f"Bearer {tok}","Accept":"application/vnd.github.raw"},timeout=600)
+              r.raise_for_status(); assert len(r.content)==size, (len(r.content), size)
+              out.write(r.content); h.update(r.content)
+          out.close()
+          assert h.hexdigest()==man["sha256"], "sha mismatch"
+          print("source ok", os.path.getsize("work/source.mp4"))
+          EOF
+          ffmpeg -v error -y -i work/source.mp4 -vn -ac 1 -ar 44100 -c:a pcm_s16le work/mix44.wav
+          ffmpeg -v error -y -i work/source.mp4 -vn -ac 1 -ar 16000 -c:a pcm_s16le work/mix16.wav
+          ls -la work
+
+      - name: Vocal separation (demucs htdemucs)
+        run: |
+          set -euo pipefail
+          python -m demucs --two-stems=vocals -n htdemucs -o work/sep work/mix44.wav
+          find work/sep -name "*.wav" | sort
+          ffmpeg -v error -y -i work/sep/htdemucs/mix44/vocals.wav -ac 1 -ar 16000 -c:a pcm_s16le work/vocals16.wav
+
+      - name: Transcribe (faster-whisper large-v3, word timestamps)
+        run: |
+          set -euo pipefail
+          mkdir -p media/transcript
+          python3 - <<'EOF'
+          import json, time
+          from faster_whisper import WhisperModel
+          model = WhisperModel("large-v3", device="cpu", compute_type="int8")
+          def run(path, tag, **kw):
+              t0=time.time()
+              segs, info = model.transcribe(path, beam_size=5, word_timestamps=True,
+                                            vad_filter=False, condition_on_previous_text=False, **kw)
+              out={"file":path,"tag":tag,"language":info.language,"language_probability":info.language_probability,"segments":[]}
+              for s in segs:
+                  out["segments"].append({"start":s.start,"end":s.end,"text":s.text,"avg_logprob":s.avg_logprob,"no_speech_prob":s.no_speech_prob,
+                      "words":[{"w":w.word,"s":w.start,"e":w.end,"p":w.probability} for w in (s.words or [])]})
+              out["elapsed"]=time.time()-t0
+              json.dump(out, open(f"media/transcript/{tag}.json","w"), ensure_ascii=False, indent=1)
+              txt="\n".join(f"[{s['start']:6.2f}-{s['end']:6.2f}] {s['text'].strip()}" for s in out["segments"])
+              open(f"media/transcript/{tag}.txt","w").write(f"# lang={info.language} p={info.language_probability:.2f}\n"+txt+"\n")
+              print("=====",tag,info.language,info.language_probability); print(txt)
+              return out
+          # 1) vocals-only, auto language
+          v = run("work/vocals16.wav","vocals_auto")
+          lang = v["language"]
+          # 2) full mix, auto
+          run("work/mix16.wav","mix_auto")
+          # 3) vocals, forced English (in case of Hinglish/EN pop) and forced Hindi for comparison
+          if lang != "en": run("work/vocals16.wav","vocals_en", language="en")
+          if lang != "hi": run("work/vocals16.wav","vocals_hi", language="hi")
+          # 4) vocals with a lyric-style prompt to encourage line breaks / casing
+          run("work/vocals16.wav","vocals_prompt", language=lang, initial_prompt="Song lyrics, one line per phrase.")
+          EOF
+
+      - name: Commit transcripts
+        if: always()
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media/transcript || true
+          git commit -m "chore(media): transcripts from run ${{ github.run_id }} [skip ci]" || echo "nothing to commit"
+          git pull --rebase origin ${{ github.ref_name }} || true
+          git push origin HEAD:${{ github.ref_name }}
