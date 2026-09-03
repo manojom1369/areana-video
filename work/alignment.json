@@ -1,0 +1,430 @@
+{
+  "detected": [
+    {
+      "word": "Kila",
+      "start": 0.0,
+      "end": 0.3
+    },
+    {
+      "word": "kila",
+      "start": 0.3,
+      "end": 0.74
+    },
+    {
+      "word": "mani",
+      "start": 0.74,
+      "end": 1.06
+    },
+    {
+      "word": "kalaavaru",
+      "start": 1.06,
+      "end": 2.08
+    },
+    {
+      "word": "raniципakal",
+      "start": 2.08,
+      "end": 3.1
+    },
+    {
+      "word": "kallu",
+      "start": 3.1,
+      "end": 3.52
+    },
+    {
+      "word": "mane",
+      "start": 3.52,
+      "end": 3.74
+    },
+    {
+      "word": "kadhaakali",
+      "start": 3.74,
+      "end": 4.9
+    },
+    {
+      "word": "kaaneeKapal",
+      "start": 4.9,
+      "end": 5.9
+    },
+    {
+      "word": "leni",
+      "start": 5.9,
+      "end": 6.26
+    },
+    {
+      "word": "kallalloni",
+      "start": 6.26,
+      "end": 7.36
+    },
+    {
+      "word": "kavvintalni",
+      "start": 7.36,
+      "end": 8.48
+    },
+    {
+      "word": "hello",
+      "start": 8.48,
+      "end": 8.74
+    },
+    {
+      "word": "ani",
+      "start": 8.74,
+      "end": 9.26
+    },
+    {
+      "word": "Chal",
+      "start": 9.26,
+      "end": 10.16
+    },
+    {
+      "word": "mohanaanga",
+      "start": 10.16,
+      "end": 10.98
+    },
+    {
+      "word": "sukhalaku",
+      "start": 10.98,
+      "end": 11.88
+    },
+    {
+      "word": "boneeKapal",
+      "start": 11.88,
+      "end": 12.94
+    },
+    {
+      "word": "gili",
+      "start": 12.94,
+      "end": 13.3
+    },
+    {
+      "word": "annee",
+      "start": 13.3,
+      "end": 13.8
+    },
+    {
+      "word": "polo",
+      "start": 13.8,
+      "end": 14.38
+    },
+    {
+      "word": "mani",
+      "start": 14.38,
+      "end": 14.78
+    },
+    {
+      "word": "ponee",
+      "start": 14.78,
+      "end": 15.5
+    },
+    {
+      "word": "singaaraanni",
+      "start": 15.5,
+      "end": 17.32
+    },
+    {
+      "word": "chindinchanee",
+      "start": 17.32,
+      "end": 18.26
+    },
+    {
+      "word": "chalo",
+      "start": 18.26,
+      "end": 18.66
+    },
+    {
+      "word": "honey",
+      "start": 18.66,
+      "end": 19.14
+    }
+  ],
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 9.26,
+      "text": " Kila kila mani kalaavaru raniципakal kallu mane kadhaakali kaaneeKapal leni kallalloni kavvintalni hello ani",
+      "tokens": [
+        50364,
+        591,
+        7371,
+        5128,
+        64,
+        587,
+        72,
+        350,
+        5159,
+        706,
+        16870,
+        367,
+        3782,
+        27663,
+        514,
+        304,
+        350,
+        336,
+        84,
+        12743,
+        8064,
+        1641,
+        514,
+        5103,
+        6799,
+        282,
+        1653,
+        35372,
+        304,
+        287,
+        15711,
+        350,
+        336,
+        336,
+        17049,
+        39039,
+        85,
+        686,
+        304,
+        3722,
+        7751,
+        40477,
+        50852
+      ],
+      "temperature": 0,
+      "avg_logprob": -0.4866451170386338,
+      "compression_ratio": 1.4758620689655173,
+      "no_speech_prob": 0.13619080185890198,
+      "words": [
+        {
+          "word": " Kila",
+          "start": 0.0,
+          "end": 0.3,
+          "probability": 0.01305300637613982
+        },
+        {
+          "word": " kila",
+          "start": 0.3,
+          "end": 0.74,
+          "probability": 0.5281664356589317
+        },
+        {
+          "word": " mani",
+          "start": 0.74,
+          "end": 1.06,
+          "probability": 0.2937060932163149
+        },
+        {
+          "word": " kalaavaru",
+          "start": 1.06,
+          "end": 2.08,
+          "probability": 0.37447508005425334
+        },
+        {
+          "word": " raniципakal",
+          "start": 2.08,
+          "end": 3.1,
+          "probability": 0.31846245436704523
+        },
+        {
+          "word": " kallu",
+          "start": 3.1,
+          "end": 3.52,
+          "probability": 0.12098600218693416
+        },
+        {
+          "word": " mane",
+          "start": 3.52,
+          "end": 3.74,
+          "probability": 0.002858723048120737
+        },
+        {
+          "word": " kadhaakali",
+          "start": 3.74,
+          "end": 4.9,
+          "probability": 0.3060869462788105
+        },
+        {
+          "word": " kaaneeKapal",
+          "start": 4.9,
+          "end": 5.9,
+          "probability": 0.18979924698069225
+        },
+        {
+          "word": " leni",
+          "start": 5.9,
+          "end": 6.26,
+          "probability": 0.15190241765230894
+        },
+        {
+          "word": " kallalloni",
+          "start": 6.26,
+          "end": 7.36,
+          "probability": 0.3984922601375729
+        },
+        {
+          "word": " kavvintalni",
+          "start": 7.36,
+          "end": 8.48,
+          "probability": 0.3639485229388811
+        },
+        {
+          "word": " hello",
+          "start": 8.48,
+          "end": 8.74,
+          "probability": 0.00010767357161967084
+        },
+        {
+          "word": " ani",
+          "start": 8.74,
+          "end": 9.26,
+          "probability": 0.0007307775667868555
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 9.26,
+      "end": 15.5,
+      "text": " Chal mohanaanga sukhalaku boneeKapal gili annee polo mani ponee",
+      "tokens": [
+        50852,
+        761,
+        304,
+        705,
+        39907,
+        26005,
+        46432,
+        4947,
+        15803,
+        9026,
+        68,
+        35372,
+        304,
+        290,
+        2312,
+        22256,
+        68,
+        1180,
+        78,
+        587,
+        72,
+        40192,
+        68,
+        51136
+      ],
+      "temperature": 0,
+      "avg_logprob": -0.4866451170386338,
+      "compression_ratio": 1.4758620689655173,
+      "no_speech_prob": 0.13619080185890198,
+      "words": [
+        {
+          "word": " Chal",
+          "start": 9.26,
+          "end": 10.16,
+          "probability": 0.4461810030043125
+        },
+        {
+          "word": " mohanaanga",
+          "start": 10.16,
+          "end": 10.98,
+          "probability": 0.3844813797622919
+        },
+        {
+          "word": " sukhalaku",
+          "start": 10.98,
+          "end": 11.88,
+          "probability": 0.25928076605002087
+        },
+        {
+          "word": " boneeKapal",
+          "start": 11.88,
+          "end": 12.94,
+          "probability": 0.2884113956197325
+        },
+        {
+          "word": " gili",
+          "start": 12.94,
+          "end": 13.3,
+          "probability": 0.5640643239021301
+        },
+        {
+          "word": " annee",
+          "start": 13.3,
+          "end": 13.8,
+          "probability": 0.011626609975792235
+        },
+        {
+          "word": " polo",
+          "start": 13.8,
+          "end": 14.38,
+          "probability": 0.48731181025505066
+        },
+        {
+          "word": " mani",
+          "start": 14.38,
+          "end": 14.78,
+          "probability": 0.5249712020158768
+        },
+        {
+          "word": " ponee",
+          "start": 14.78,
+          "end": 15.5,
+          "probability": 0.4830549005419016
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 15.5,
+      "end": 19.14,
+      "text": " singaaraanni chindinchanee chalo honey",
+      "tokens": [
+        51136,
+        1522,
+        64,
+        2419,
+        35832,
+        417,
+        471,
+        259,
+        3484,
+        1653,
+        417,
+        10334,
+        8330,
+        51340
+      ],
+      "temperature": 0,
+      "avg_logprob": -0.4866451170386338,
+      "compression_ratio": 1.4758620689655173,
+      "no_speech_prob": 0.13619080185890198,
+      "words": [
+        {
+          "word": " singaaraanni",
+          "start": 15.5,
+          "end": 17.32,
+          "probability": 0.007105821674485924
+        },
+        {
+          "word": " chindinchanee",
+          "start": 17.32,
+          "end": 18.26,
+          "probability": 0.1804884159937501
+        },
+        {
+          "word": " chalo",
+          "start": 18.26,
+          "end": 18.66,
+          "probability": 0.20895385509356856
+        },
+        {
+          "word": " honey",
+          "start": 18.66,
+          "end": 19.14,
+          "probability": 0.12253653258085251
+        }
+      ]
+    }
+  ],
+  "lyrics": "Kila kila mani kalaavaru rani\nghallughallu mane kadhaakali kaanee\nkallem leni kallalloni kavvintalni hello ani\nchal mohanaanga sukhalaku bonee\nchaligili annee polo mani ponee\nsigge leni singaaraanni chindinchanee chalo honey"
+}
