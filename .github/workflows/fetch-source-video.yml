@@ -15,6 +15,9 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena/01a066fd-areana-video
       - name: Resolve WeTransfer download
         env:
           TRANSFER_ID: 447f68c9f4681d48741b5c2a57317edc20260903113914
@@ -32,13 +35,12 @@ jobs:
           curl -L --fail --retry 3 -o source-download "$url"
           file source-download
           ls -lh source-download
-      - name: Publish temporary source asset
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Commit source into editing branch
         run: |
-          gh release delete arena-source-video --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
-          gh release create arena-source-video source-download \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title 'Temporary source video' \
-            --notes 'Temporary editing input; remove after delivery.'
+          mkdir -p work/source
+          mv source-download work/source/wetransfer-download
+          git config user.name 'arena-video-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f work/source/wetransfer-download
+          git commit -m 'Add downloaded source video'
+          git push origin HEAD:arena/01a066fd-areana-video
