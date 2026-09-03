@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Lyric Studio — ARENA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◉</span>
+    <div>
+      <h1>KINETIC<span> LYRIC STUDIO</span></h1>
+      <p>word-synced typography engine</p>
+    </div>
+  </div>
+  <input id="projectTitle" class="title-input" value="Neon Nights — Demo" spellcheck="false" aria-label="Project title">
+  <div class="top-actions">
+    <label class="btn ghost">
+      ♪ Load Song
+      <input type="file" id="audioFile" accept="audio/*" hidden>
+    </label>
+    <label class="btn ghost">
+      ⇩ Import LRC/SRT
+      <input type="file" id="subsFile" accept=".lrc,.srt,.txt" hidden>
+    </label>
+    <button class="btn ghost" id="btnDemo">↺ Demo</button>
+  </div>
+</header>
+
+<main class="workspace">
+
+  <!-- ══ stage ══ -->
+  <section class="stage-col">
+    <div class="stage-wrap" id="stageWrap">
+      <canvas id="stage"></canvas>
+
+      <!-- tap timing overlay -->
+      <div class="tap-overlay hidden" id="tapOverlay">
+        <div class="tap-badge">TAP MODE</div>
+        <div class="tap-count" id="tapCount">1 / 13</div>
+        <div class="tap-line" id="tapLine">…</div>
+        <div class="tap-hint">
+          <b>SPACE</b> stamp line &nbsp;·&nbsp; <b>⌫</b> undo &nbsp;·&nbsp; <b>ESC</b> finish
+        </div>
+      </div>
+
+      <!-- recording chip -->
+      <div class="rec-chip hidden" id="recChip">
+        <span class="rec-dot"></span> REC <span id="recPct">0%</span>
+        <div class="rec-bar"><i id="recBar"></i></div>
+      </div>
+
+      <div class="stage-meta" id="stageMeta">1920×1080 · punch</div>
+    </div>
+
+    <!-- transport -->
+    <div class="transport">
+      <button class="play-btn" id="btnPlay" title="Play/Pause (Space)">▶</button>
+      <button class="tbtn" id="btnStop" title="Stop">■</button>
+      <span class="time mono" id="timeLabel">0:00.0</span>
+      <input type="range" id="seek" class="seek" min="0" max="30" step="0.01" value="0">
+      <span class="time mono dim" id="durLabel">0:30</span>
+
+      <div class="beat-lamp" id="beatLamp" title="beat pulse"></div>
+
+      <label class="field">BPM <input type="number" id="bpm" class="mono" min="40" max="240" step="0.5" value="102"></label>
+      <button class="tbtn" id="btnTapBpm" title="tap 4 times">TAP</button>
+      <label class="field">Offset <input type="number" id="offsetMs" class="mono" step="10" value="650"> ms</label>
+      <label class="field">Line/Bar
+        <select id="barsPerLine">
+          <option value="0.5">½</option>
+          <option value="1" selected>1</option>
+          <option value="2">2</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="demoBeat" checked> beat</label>
+      <label class="chk" title="drive motion from the song's bass energy"><input type="checkbox" id="reactive"> reactive</label>
+    </div>
+  </section>
+
+  <!-- ══ side panel ══ -->
+  <aside class="panel">
+    <nav class="tabs">
+      <button class="tab active" data-tab="lyrics">Lyrics</button>
+      <button class="tab" data-tab="style">Style</button>
+      <button class="tab" data-tab="motion">Motion</button>
+      <button class="tab" data-tab="export">Export</button>
+    </nav>
+
+    <!-- LYRICS -->
+    <div class="tabpane active" id="tab-lyrics">
+      <textarea id="lyricText" class="lyrics-input mono" spellcheck="false" placeholder="Paste lyrics…&#10;Wrap a word in *asterisks* for accent emphasis.&#10;CAPS words get emphasis too."></textarea>
+      <div class="btn-row">
+        <button class="btn primary" id="btnApply">Apply &amp; Auto-time</button>
+        <button class="btn ghost" id="btnTap">⏱ Tap Timing</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn small ghost" id="btnNudgeL" title="shift all timing earlier">« −0.1s</button>
+        <button class="btn small ghost" id="btnNudgeR" title="shift all timing later">+0.1s »</button>
+        <span class="hint" id="lineStats">13 lines</span>
+      </div>
+      <div class="lines-list" id="linesList"></div>
+      <p class="tip">Mark emphasis with <code>*word*</code> or CAPS. Auto-time lays each line on the bar grid (BPM × line/bar). Import an <b>.lrc</b> for exact line times — enhanced word tags <code>&lt;mm:ss.xx&gt;</code> are supported.</p>
+    </div>
+
+    <!-- STYLE -->
+    <div class="tabpane" id="tab-style">
+      <h3 class="sec">Kinetic style</h3>
+      <div class="style-grid" id="styleGrid"></div>
+
+      <h3 class="sec">Typeface</h3>
+      <select id="fontSelect" class="wide">
+        <option>Anton</option><option>Archivo Black</option><option>Bebas Neue</option>
+        <option>Inter</option><option>Space Grotesk</option><option>JetBrains Mono</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="uppercase" checked> UPPERCASE</label>
+
+      <h3 class="sec">Background</h3>
+      <select id="bgSelect" class="wide">
+        <option value="aurora">Aurora glow</option>
+        <option value="particles">Particles</option>
+        <option value="grid">Synth grid</option>
+        <option value="flat">Flat</option>
+      </select>
+
+      <h3 class="sec">Palette</h3>
+      <div class="palette-chips" id="paletteChips"></div>
+      <div class="color-grid">
+        <label>bg deep <input type="color" id="cBg1"></label>
+        <label>bg lift <input type="color" id="cBg2"></label>
+        <label>accent <input type="color" id="cAccent"></label>
+        <label>text <input type="color" id="cText"></label>
+      </div>
+    </div>
+
+    <!-- MOTION -->
+    <div class="tabpane" id="tab-motion">
+      <h3 class="sec">Beat motion</h3>
+      <div class="slider-row"><span>Zoom punch</span><input type="range" id="mZoom" min="0" max="0.12" step="0.005"><b class="mono" id="mZoomV"></b></div>
+      <div class="slider-row"><span>Camera shake</span><input type="range" id="mShake" min="0" max="0.5" step="0.01"><b class="mono" id="mShakeV"></b></div>
+
+      <h3 class="sec">Line transitions</h3>
+      <div class="slider-row"><span>Enter (ms)</span><input type="range" id="mEnter" min="60" max="700" step="10"><b class="mono" id="mEnterV"></b></div>
+      <div class="slider-row"><span>Exit (ms)</span><input type="range" id="mExit" min="60" max="700" step="10"><b class="mono" id="mExitV"></b></div>
+
+      <h3 class="sec">Finish</h3>
+      <label class="chk"><input type="checkbox" id="mGrain"> Film grain</label>
+      <label class="chk"><input type="checkbox" id="mVignette"> Vignette</label>
+      <label class="chk"><input type="checkbox" id="mProgress"> Progress bar</label>
+
+      <h3 class="sec">Shortcuts</h3>
+      <div class="keys mono">
+        SPACE play · T tap-mode<br>
+        1–6 styles · ←/→ seek 2s<br>
+        [ ] nudge timing · F fullscreen
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="tabpane" id="tab-export">
+      <h3 class="sec">Format</h3>
+      <div class="btn-row">
+        <select id="aspect" class="wide">
+          <option value="16:9">16:9 — YouTube</option>
+          <option value="9:16">9:16 — Reels / Shorts</option>
+          <option value="1:1">1:1 — Square</option>
+        </select>
+        <select id="fps">
+          <option value="60" selected>60 fps</option>
+          <option value="30">30 fps</option>
+        </select>
+      </div>
+
+      <h3 class="sec">Render</h3>
+      <button class="btn primary wide" id="btnRecord">⬤ Record Video (WebM)</button>
+      <div class="btn-row">
+        <button class="btn ghost" id="btnPNG">Save PNG frame</button>
+        <button class="btn ghost" id="btnSRT">Export .SRT</button>
+      </div>
+      <p class="tip">Recording plays the project once in real time and captures exactly what you see — including your song and the demo beat (mute <i>beat</i> in the transport bar if your song already has drums). WebM drops straight into DaVinci/Premiere/CapCut.</p>
+    </div>
+  </aside>
+</main>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
