@@ -1,0 +1,45 @@
+[Script Info]
+Title: Kinetic brush-script lyric typography
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Kinetic,Kaushan Script,60,&H00FFFFFF,&H0044C3F6,&HDC101010,&H80000000,0,0,0,0,100,100,0,0,1,4,3,5,30,30,30,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:00.30,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}Kila {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kila {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}mani
+Dialogue: 0,0:00:00.30,0:00:00.74,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}Kila {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}kila {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}mani
+Dialogue: 0,0:00:00.74,0:00:01.06,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}Kila {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kila {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}mani
+Dialogue: 0,0:00:01.06,0:00:02.08,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}kalaavaru {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}rani
+Dialogue: 0,0:00:02.08,0:00:03.10,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kalaavaru {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}rani
+Dialogue: 0,0:00:03.10,0:00:03.52,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}ghallughallu {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}mane
+Dialogue: 0,0:00:03.52,0:00:03.74,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}ghallughallu {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}mane
+Dialogue: 0,0:00:03.74,0:00:04.90,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}kadhaakali {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kaanee
+Dialogue: 0,0:00:04.90,0:00:05.35,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kadhaakali {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}kaanee
+Dialogue: 0,0:00:05.35,0:00:05.90,Kinetic,,0,0,0,,{\an5\pos(380,220)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}kallem {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}leni {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kallalloni
+Dialogue: 0,0:00:05.90,0:00:06.26,Kinetic,,0,0,0,,{\an5\pos(380,220)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kallem {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}leni {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kallalloni
+Dialogue: 0,0:00:06.26,0:00:07.36,Kinetic,,0,0,0,,{\an5\pos(380,220)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kallem {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}leni {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}kallalloni
+Dialogue: 0,0:00:07.36,0:00:08.48,Kinetic,,0,0,0,,{\an5\pos(380,220)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}kavvintalni {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}hello {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}ani
+Dialogue: 0,0:00:08.48,0:00:08.74,Kinetic,,0,0,0,,{\an5\pos(380,220)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kavvintalni {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}hello {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}ani
+Dialogue: 0,0:00:08.74,0:00:09.26,Kinetic,,0,0,0,,{\an5\pos(380,220)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}kavvintalni {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}hello {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}ani
+Dialogue: 0,0:00:09.26,0:00:10.16,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}chal {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}mohanaanga
+Dialogue: 0,0:00:10.16,0:00:10.98,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}chal {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}mohanaanga
+Dialogue: 0,0:00:10.98,0:00:11.88,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}sukhalaku {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}bonee
+Dialogue: 0,0:00:11.88,0:00:12.40,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}sukhalaku {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}bonee
+Dialogue: 0,0:00:12.40,0:00:13.30,Kinetic,,0,0,0,,{\an5\pos(380,230)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}chaligili {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}annee
+Dialogue: 0,0:00:13.30,0:00:13.80,Kinetic,,0,0,0,,{\an5\pos(380,230)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}chaligili {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}annee
+Dialogue: 0,0:00:13.80,0:00:14.38,Kinetic,,0,0,0,,{\an5\pos(380,230)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}polo {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}mani {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}ponee
+Dialogue: 0,0:00:14.38,0:00:14.78,Kinetic,,0,0,0,,{\an5\pos(380,230)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}polo {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}mani {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}ponee
+Dialogue: 0,0:00:14.78,0:00:15.50,Kinetic,,0,0,0,,{\an5\pos(380,230)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}polo {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}mani {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}ponee
+Dialogue: 0,0:00:15.50,0:00:15.95,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}sigge {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}leni {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}singaaraanni
+Dialogue: 0,0:00:15.95,0:00:16.30,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}sigge {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}leni {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}singaaraanni
+Dialogue: 0,0:00:16.30,0:00:17.32,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}sigge {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}leni {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}singaaraanni
+Dialogue: 0,0:00:17.32,0:00:18.26,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}chindinchanee {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}chalo {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}honey
+Dialogue: 0,0:00:18.26,0:00:18.66,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}chindinchanee {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}chalo {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}honey
+Dialogue: 0,0:00:18.66,0:00:19.14,Kinetic,,0,0,0,,{\an5\pos(360,1060)\fad(90,90)}{\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}chindinchanee {\c&HFFFFFF&\3c&H101010&\bord4\fscx100\fscy100}chalo {\c&H44C3F6&\3c&H251400&\bord5\fscx112\fscy112\t(0,170,\fscx100\fscy100)}honey
