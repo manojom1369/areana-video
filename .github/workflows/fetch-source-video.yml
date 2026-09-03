@@ -1,0 +1,33 @@
+name: Fetch source video
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve WeTransfer download
+        env:
+          TRANSFER_ID: 447f68c9f4681d48741b5c2a57317edc20260903113914
+          SECURITY_HASH: f247fc
+        run: |
+          set -euo pipefail
+          response=$(curl --fail-with-body --retry 3 \
+            'https://wetransfer.com/api/v4/transfers/'"$TRANSFER_ID"'/download' \
+            -H 'content-type: application/json' \
+            -H 'x-requested-with: XMLHttpRequest' \
+            --data-raw '{"security_hash":"'"$SECURITY_HASH"'","intent":"entire_transfer"}')
+          echo "$response" | jq .
+          url=$(echo "$response" | jq -r '.direct_link // .download_url // empty')
+          test -n "$url"
+          curl -L --fail --retry 3 -o source-download "$url"
+          file source-download
+          ls -lh source-download
+      - name: Upload source video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-video
+          path: source-download
+          compression-level: 0
+          retention-days: 1
