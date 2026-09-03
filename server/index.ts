@@ -3,7 +3,7 @@ import path from "node:path";
 import { bundle } from "@remotion/bundler";
 import { ensureBrowser, type BrowserExecutable } from "@remotion/renderer";
 import { makeRenderQueue, type RenderJob } from "./queue";
-import { getTemplate, TEMPLATES } from "./templates";
+import { getMotionPreset, getTemplate, MOTION_PRESETS, TEMPLATES, validateMotionJob } from "./templates";
 
 /**
  * Areana Video render API
@@ -31,13 +31,19 @@ const baseUrl = process.env.PUBLIC_BASE_URL ?? "";
 
 const COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
+const knownIds = (): string => {
+  const text = TEMPLATES.map((t) => t.id);
+  const motion = MOTION_PRESETS.map((p) => p.id);
+  return [...text, ...motion].join(", ");
+};
+
 const validateProps = (
   templateId: string,
   props: unknown,
 ): { ok: true; props: Record<string, string> } | { ok: false; error: string } => {
   const template = getTemplate(templateId);
   if (!template) {
-    return { ok: false, error: `Unknown template "${templateId}". Known: ${TEMPLATES.map((t) => t.id).join(", ")}` };
+    return { ok: false, error: `Unknown template "${templateId}". Known: ${knownIds()}` };
   }
   if (typeof props !== "object" || props === null || Array.isArray(props)) {
     return { ok: false, error: "props must be an object of string values" };
@@ -90,13 +96,14 @@ const main = async (): Promise<void> => {
   console.info(`Bundle ready: ${serveUrl}`);
 
   const app = express();
-  app.use(express.json({ limit: "64kb" }));
+  app.use(express.json({ limit: "4mb" }));
 
   // Finished videos are served from /renders/<jobId>.mp4
   const rendersDir = path.resolve("renders");
   app.use("/renders", express.static(rendersDir, { immutable: true, maxAge: "1h" }));
 
-  // Demo web UI
+  // Project assets (vendored fonts under public/fonts) + web UI
+  app.use(express.static(path.resolve("public")));
   app.use(express.static(path.resolve("server/public")));
 
   const queue = makeRenderQueue({
@@ -138,6 +145,16 @@ const main = async (): Promise<void> => {
         defaultProps: t.defaultProps,
         fields: t.fields,
       })),
+      motionPresets: MOTION_PRESETS.map((p) => ({
+        id: p.id,
+        label: p.label,
+        description: p.description,
+        width: p.width,
+        height: p.height,
+        fps: p.fps,
+        maxDurationInFrames: p.maxDurationInFrames,
+        defaultProject: p.defaultProject,
+      })),
     });
   });
 
@@ -148,6 +165,22 @@ const main = async (): Promise<void> => {
       res.status(400).json({ error: "templateId is required" });
       return;
     }
+
+    if (getMotionPreset(templateId)) {
+      const validated = validateMotionJob(templateId, req.body);
+      if (!validated.ok) {
+        res.status(400).json({ error: validated.error });
+        return;
+      }
+      const preset = getMotionPreset(templateId)!;
+      const duration = validated.props.project.durationInFrames;
+      const frameRange: [number, number] =
+        duration < preset.maxDurationInFrames ? [0, duration - 1] : [0, preset.maxDurationInFrames - 1];
+      const jobId = queue.enqueue({ templateId, props: validated.props, frameRange });
+      res.status(202).json({ jobId, status: "queued" });
+      return;
+    }
+
     const validated = validateProps(templateId, props);
     if (!validated.ok) {
       res.status(400).json({ error: validated.error });

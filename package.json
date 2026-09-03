@@ -10,6 +10,9 @@
     "server": "tsx server/index.ts",
     "dev": "tsx watch server/index.ts",
     "fonts": "node scripts/copy-fonts.mjs",
+    "editor:build": "node scripts/build-editor.mjs",
+    "editor:watch": "node scripts/build-editor.mjs --watch",
+    "postinstall": "node scripts/copy-fonts.mjs && node scripts/build-editor.mjs",
     "typecheck": "tsc",
     "upgrade": "remotion upgrade"
   },
@@ -24,6 +27,7 @@
   "dependencies": {
     "@remotion/bundler": "4.0.520",
     "@remotion/cli": "4.0.520",
+    "@remotion/player": "^4.0.520",
     "@remotion/renderer": "4.0.520",
     "@remotion/zod-types": "4.0.520",
     "express": "5.1.0",
@@ -37,7 +41,9 @@
     "@types/express": "5.0.1",
     "@types/node": "^22.20.1",
     "@types/react": "19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@types/web": "0.0.166",
+    "esbuild": "^0.28.1",
     "tsx": "4.19.3",
     "typescript": "5.9.3"
   }

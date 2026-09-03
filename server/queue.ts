@@ -15,7 +15,10 @@ import path from "node:path";
 
 export type RenderJobData = {
   readonly templateId: string;
-  readonly props: Record<string, string>;
+  readonly props: Record<string, unknown>;
+  /** Render only [start, end] — used by motion projects shorter than the
+   *  registered composition's fixed duration. */
+  readonly frameRange?: [number, number];
 };
 
 export type RenderJob =
@@ -128,6 +131,7 @@ export const makeRenderQueue = ({
         inputProps: job.data.props,
         codec: "h264",
         browserExecutable,
+        frameRange: job.data.frameRange,
         onProgress: ({ progress }) => {
           const current = jobs.get(jobId);
           if (!current || current.status !== "in-progress") {

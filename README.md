@@ -2,70 +2,91 @@
 
 Programmatic video maker built on **[Remotion](https://github.com/remotion-dev/remotion)** —
 write video templates as React components, then render them into MP4s on demand.
-
-The repo has two halves that share one codebase:
+Includes a web-based **motion editor** (Alight-Motion-style timeline: layers,
+keyframes, easing) whose projects render through the same pipeline.
 
 | Directory    | What it is                                                                 |
 | ------------ | -------------------------------------------------------------------------- |
-| `remotion/`  | The video **templates** (React compositions + zod schemas)                 |
-| `server/`    | An Express **render API**: start a job, poll progress, cancel, download MP4 |
+| `remotion/`  | Registered compositions (React + zod schemas) rendered by Remotion         |
+| `shared/motion/` | The motion-project **model + evaluation engine** shared by renderer, API and editor |
+| `server/`    | Express **render API**: start a job, poll progress, cancel, download MP4    |
+| `editor/`    | The **motion editor** web app (bundled with esbuild into `server/public/`)  |
 | `public/`    | Assets bundled into renders (vendored Montserrat fonts)                    |
-| `scripts/`   | Font sync helper                                                           |
+| `scripts/`   | Font sync + editor bundling helpers                                        |
 
-> Built by following Remotion's official templates
-> ([template-render-server](https://github.com/remotion-dev/remotion/tree/main/packages/template-render-server))
-> — remotion 4.0.520, React 19.
+> remotion 4.0.520, React 19. Architecture follows Remotion's official
+> [render-server template](https://github.com/remotion-dev/remotion/tree/main/packages/template-render-server).
 
 ## What you can do right now
 
-Two product-ad templates are included (add more by dropping a new component in
-`remotion/templates/` and registering it in `remotion/Root.tsx`):
+**Product ads** (parameterized text templates — add more by dropping a component
+in `remotion/templates/` and registering it in `remotion/Root.tsx`):
 
-- **`ProductAd`** — 1920×1080, 10 s landscape drop ad (headline, subheadline,
-  price, CTA, glowing product card)
-- **`ProductAdVertical`** — 1080×1920, 10 s vertical ad for Reels/Shorts
+- `ProductAd` — 1920×1080, 10 s landscape drop ad (headline, price, CTA…)
+- `ProductAdVertical` — 1080×1920, 10 s vertical ad for Reels/Shorts
 
-Every text string and both accent colors are parameters validated with a zod
-schema — the same schema powers the Remotion Studio prop editor **and** the
-render API, so invalid input is rejected before a render starts.
+**Motion editor projects** (rendered from project JSON, up to 10 s at 30 fps):
+
+- `MotionLandscape` — 1920×1080 editor canvas
+- `MotionPortrait` — 1080×1920 editor canvas
+
+## 🎬 Motion Editor
+
+Open **http://localhost:3000/editor.html** (link from the render lab, or run
+`npm run server` and click “Open the Motion Editor”).
+
+Alight-Motion-style workflow, in the browser:
+
+- **Layers** — text, rectangle and ellipse layers on a gradient/solid background
+- **Timeline** — rows per layer with a ruler, draggable playhead, play/pause
+  (space), arrow-key stepping, per-property **keyframe diamonds** (drag to move,
+  double-click to delete)
+- **Keyframed properties** — X, Y, scale, rotation and opacity, each with its
+  own easing curve (linear, ease-in/out quad & cubic, back…)
+- **Inspector** — edit text, font size/weight/align, colors, shape geometry, and
+  add/edit/delete keyframes at the playhead
+- **Live preview** — the canvas plays through `@remotion/player` using the exact
+  same component the renderer uses
+- **Export** — “Render MP4” validates the project, queues a job on the render
+  API (frame-trimmed to the project duration) and shows the finished video
+
+The default demo project doubles as an API example: every editor project is
+plain JSON matching the zod schema in `shared/motion/model.ts`.
 
 ## Previews
 
-Rendered stills (frame 150 of 300) of the two included templates:
+Rendered stills (frame 150 of 300):
 
-| `ProductAd` (1920×1080) | `ProductAdVertical` (1080×1920) |
-| --- | --- |
-| ![ProductAd landscape preview](docs/previews/product-ad.jpg) | ![ProductAd vertical preview](docs/previews/product-ad-vertical.jpg) |
+| Product ad 16:9 | Product ad 9:16 | Motion editor demo 16:9 | Motion editor demo 9:16 |
+| --- | --- | --- | --- |
+| ![ProductAd landscape preview](docs/previews/product-ad.jpg) | ![ProductAd vertical preview](docs/previews/product-ad-vertical.jpg) | ![Motion editor landscape preview](docs/previews/motion-landscape.jpg) | ![Motion editor portrait preview](docs/previews/motion-portrait.jpg) |
 
 ## Quickstart
 
 ```console
-npm install        # installs deps; run `npm run fonts` afterwards if fonts are missing
-npm run studio     # Remotion Studio: preview + edit the templates live (localhost:3000)
-npm run render:demo  # render the demo video straight to out/product-ad.mp4
-npm run server     # start the render API + demo web UI (localhost:3000)
+npm install                 # deps (+ postinstall: fonts + editor bundle)
+npm run server              # render API + web UI + motion editor (localhost:3000)
+npm run studio              # Remotion Studio: inspect all compositions (localhost:3001)
+npm run render:demo         # render the product-ad demo straight to out/product-ad.mp4
+npm run editor:watch        # rebuild editor bundle on change (dev)
 ```
 
 The first CLI render or server start downloads Remotion's tested headless
 Chrome automatically (needs internet, ~150 MB, cached in
 `node_modules/.remotion`).
 
-Open http://localhost:3000 — it is a small "render lab" UI: pick a template,
-edit copy/colors, hit **Render video** and watch the job progress until the
-player shows the finished MP4.
-
 ## Render API
 
 ```
-POST   /api/jobs              start a render          { "templateId": "ProductAd", "props": { ... } }
+POST   /api/jobs              start a render
 GET    /api/jobs              list jobs
-GET    /api/jobs/:id          job status + progress   → 202 { "jobId": "…" }
+GET    /api/jobs/:id          job status + progress
 DELETE /api/jobs/:id          cancel a queued/running job
 GET    /renders/<jobId>.mp4   download the finished video
-GET    /api/templates         template metadata (drives the UI, defaults, fields)
+GET    /api/templates         template + motion preset metadata
 ```
 
-Example:
+Text-template job:
 
 ```console
 curl -s -X POST localhost:3000/api/jobs \
@@ -85,6 +106,24 @@ curl -s -X POST localhost:3000/api/jobs \
 curl -s localhost:3000/api/jobs/<jobId>     # poll → { status: "in-progress", progress: 47 }
 ```
 
+Motion-project job (project JSON from the editor, or any valid motion project):
+
+```console
+curl -s -X POST localhost:3000/api/jobs \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "templateId": "MotionLandscape",
+    "props": {
+      "project": { "version": 1, "width": 1920, "height": 1080, "fps": 30,
+                   "durationInFrames": 120, "background": { "type": "solid", "color": "#0b0a14" },
+                   "fontFamily": "Montserrat", "layers": [] }
+    }
+  }'
+```
+
+The server validates the payload against the zod schema, checks the canvas
+matches the preset, and trims the render to the project's duration.
+
 ### Environment variables
 
 | Variable                | Default                | Meaning                                                                  |
@@ -103,33 +142,49 @@ Remotion renders with headless Chrome. If your machine can't download it
 BROWSER_EXECUTABLE=/path/to/chromium npm run server
 ```
 
-The demo in this repo was verified end-to-end against a Chromium 149 binary
-that was fetched from the npm registry and run with its bundled shared
-libraries (see `server/index.ts` → `ensureBrowser({ browserExecutable })`).
+This repo was verified end-to-end against a Chromium 149 binary fetched from
+the npm registry and run with its bundled shared libraries (see
+`server/index.ts` → `ensureBrowser({ browserExecutable })`). The same env var
+is picked up by `remotion.config.ts` for CLI commands.
 
 ## Project layout
 
 ```
 remotion/
   index.ts                  entry point (registerRoot)
-  Root.tsx                  <Composition> registry — one per template id
+  Root.tsx                  <Composition> registry — template + motion ids
   lib/fonts.ts              vendored Montserrat loader (offline-safe)
-  lib/motion.tsx            reusable animation helpers (springs, glows, reveals)
+  lib/motion.tsx            animation helpers for the product-ad templates
   templates/ProductAd.tsx   schema + defaults + component (handles 16:9 & 9:16)
+shared/motion/
+  model.ts                  zod project model: layers, keyframes, easing
+  engine.ts                 pure evaluation: values/styles at any frame
+  MotionProjectView.tsx     the component that renders a project (Remotion)
 server/
   index.ts                  Express app + job endpoints + static UI
   queue.ts                  FIFO render queue (single worker, cancel support)
-  templates.ts              template registry the API/UI read from
-  public/index.html         the "render lab" demo UI (no build step)
+  templates.ts              template + motion preset registry for the API/UI
+  public/                   render lab (index.html) + editor shell (editor.html)
+editor/
+  main.tsx / app.tsx        editor boot + state, playback, export
+  Timeline.tsx              layer rows, keyframe diamonds, ruler, playhead
+  Inspector.tsx             per-layer properties + keyframe editing
+  editor.css                styles (bundled by esbuild → server/public/main.css)
+scripts/
+  copy-fonts.mjs            vendored Montserrat woff2 → public/fonts
+  build-editor.mjs          esbuild bundle editor → server/public
 ```
 
-### Adding a template
+## Adding a template / composition
 
-1. Create `remotion/templates/YourTemplate.tsx` with a zod schema +
-   `defaultProps` (colors via `zColor()` from `@remotion/zod-types`).
-2. Register a `<Composition>` in `remotion/Root.tsx`.
-3. Add matching metadata in `server/templates.ts` so the API and web UI know
-   about it — that's it. Studio, API and UI all pick it up.
+1. Text template: create `remotion/templates/YourTemplate.tsx` (zod schema +
+   `defaultProps`, colors via `zColor()`), register a `<Composition>` in
+   `remotion/Root.tsx`, then add metadata in `server/templates.ts`.
+2. Motion preset: any project JSON is already renderable through
+   `MotionLandscape` / `MotionPortrait` — to add a canvas size, register a new
+   `<Composition>` plus a matching `MOTION_PRESETS` entry.
+
+Studio, render API and editor pick everything up automatically.
 
 ## Production notes
 
@@ -142,6 +197,9 @@ server/
   `@fontsource/montserrat` package) so renders never depend on a font CDN.
 - Video codec is H.264 (`codec: "h264"` in `server/queue.ts`). `@remotion/renderer`
   supports WebM/VP8/VP9, ProRes and more.
+- The editor bundle (`server/public/main.{js,css}`) is a build artifact — it is
+  recreated by `npm run editor:build` (also wired into `postinstall`) and is
+  not committed.
 
 ## Useful links
 
@@ -149,3 +207,4 @@ server/
 - Remotion docs: https://www.remotion.dev/docs
 - Render server template this is based on:
   https://github.com/remotion-dev/remotion/tree/main/packages/template-render-server
+- Alight Motion (design inspiration for the editor UX): https://alightmotion.com

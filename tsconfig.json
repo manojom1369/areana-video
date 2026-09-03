@@ -14,6 +14,15 @@
     "noUnusedParameters": true,
     "types": ["@types/web", "node"]
   },
-  "include": ["remotion/**/*.ts", "remotion/**/*.tsx", "server/**/*.ts", "server/**/*.tsx"],
-  "exclude": ["remotion.config.ts", "node_modules", "out", "renders", "public"]
+  "include": [
+    "remotion/**/*.ts",
+    "remotion/**/*.tsx",
+    "server/**/*.ts",
+    "server/**/*.tsx",
+    "shared/**/*.ts",
+    "shared/**/*.tsx",
+    "editor/**/*.ts",
+    "editor/**/*.tsx"
+  ],
+  "exclude": ["remotion.config.ts", "node_modules", "out", "renders", "public", "server/public/editor.bundle.js"]
 }
