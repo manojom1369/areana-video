@@ -1,0 +1,59 @@
+name: Align lyrics
+
+on:
+  push:
+    branches:
+      - arena/01a066fd-areana-video
+    paths:
+      - .github/workflows/align-lyrics.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena/01a066fd-areana-video
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install -q openai-whisper
+      - name: Force-align supplied lyrics
+        run: |
+          cat > /tmp/align.py <<'PY'
+          import json, whisper
+          lyrics = """Kila kila mani kalaavaru rani
+ghallughallu mane kadhaakali kaanee
+kallem leni kallalloni kavvintalni hello ani
+chal mohanaanga sukhalaku bonee
+chaligili annee polo mani ponee
+sigge leni singaaraanni chindinchanee chalo honey"""
+          model = whisper.load_model("small")
+          result = model.transcribe(
+              "work/source/wetransfer-download",
+              language="te",
+              initial_prompt=lyrics,
+              word_timestamps=True,
+              condition_on_previous_text=False,
+              temperature=0,
+          )
+          words=[]
+          for seg in result["segments"]:
+              for w in seg.get("words", []):
+                  words.append({"word":w["word"].strip(),"start":round(w["start"],3),"end":round(w["end"],3)})
+          with open("work/alignment.json","w") as f:
+              json.dump({"detected":words,"segments":result["segments"],"lyrics":lyrics},f,ensure_ascii=False,indent=2)
+          print(json.dumps(words,ensure_ascii=False,indent=2))
+          PY
+          python /tmp/align.py
+      - name: Commit alignment
+        run: |
+          git config user.name 'arena-video-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add work/alignment.json
+          git commit -m 'Add automatic lyric timing alignment'
+          git push origin HEAD:arena/01a066fd-areana-video
