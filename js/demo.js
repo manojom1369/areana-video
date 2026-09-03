@@ -1,20 +1,10 @@
-// ─── demo.js — starter project (original lyrics) ─────────────────────────────
-export const DEMO_TITLE = 'Neon Nights — Demo';
+// ─── demo.js — starter project ───────────────────────────────────────────────
+export const DEMO_TITLE = 'Yeshanagula Kattameedha — Uyyala';
 
-export const DEMO_LYRICS = `Neon streets, we *run* the night
-Chasing *lights* till the morning
-City burns in ELECTRIC blue
-Every heartbeat sounds like *boom*
-
-We are the sound, the *fire*, the wave
-Turning silence into GOLD again
-Hold my hand, don't you *let go*
-We are the lights the world can't hold
-
-*Whoa-oh*, we're glowing
-*Whoa-oh*, we're rising
-Turn it up, let the *bass* drop
-This is our moment — never gonna *stop*`;
+export const DEMO_LYRICS = `Yeshanagula kattameedha yeshina *uyyala*
+Manamvugudhame *baala*
+Yeshanagula kattameedha yeshina *uyyala*
+Manamvugudhame *baala*`;
 
 export const DEFAULT_SETTINGS = {
   title: DEMO_TITLE,
@@ -26,10 +16,10 @@ export const DEFAULT_SETTINGS = {
   grain: true,
   progress: true,
   aspect: '16:9',
-  palette: { bg1: '#070b18', bg2: '#101a38', accent: '#6ee7ff', text: '#f2f6ff' },
+  palette: { bg1: '#180a1c', bg2: '#3d1130', accent: '#ff7a59', text: '#fff2ec' },
   motion: {
-    bpm: 102, offsetSec: 0.65, barsPerLine: 1,
-    zoom: 0.04, shake: 0.12, enterMs: 220, exitMs: 260,
+    bpm: 96, offsetSec: 0.6, barsPerLine: 1,
+    zoom: 0.03, shake: 0.08, enterMs: 260, exitMs: 280,
     reactive: false, demoBeat: true,
   },
 };
