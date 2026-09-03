@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2018",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "lib": ["es2015"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["@types/web", "node"]
+  },
+  "include": [
+    "remotion/**/*.ts",
+    "remotion/**/*.tsx",
+    "server/**/*.ts",
+    "server/**/*.tsx",
+    "shared/**/*.ts",
+    "shared/**/*.tsx",
+    "editor/**/*.ts",
+    "editor/**/*.tsx"
+  ],
+  "exclude": ["remotion.config.ts", "node_modules", "out", "renders", "public", "server/public/editor.bundle.js"]
+}
