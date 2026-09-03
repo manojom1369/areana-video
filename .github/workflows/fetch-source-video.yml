@@ -8,6 +8,9 @@ on:
     paths:
       - .github/workflows/fetch-source-video.yml
 
+permissions:
+  contents: write
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -29,10 +32,13 @@ jobs:
           curl -L --fail --retry 3 -o source-download "$url"
           file source-download
           ls -lh source-download
-      - name: Upload source video artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: source-video
-          path: source-download
-          compression-level: 0
-          retention-days: 1
+      - name: Publish temporary source asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete arena-source-video --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh release create arena-source-video source-download \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title 'Temporary source video' \
+            --notes 'Temporary editing input; remove after delivery.'
