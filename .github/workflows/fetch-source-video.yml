@@ -2,6 +2,11 @@ name: Fetch source video
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - arena/01a066fd-areana-video
+    paths:
+      - .github/workflows/fetch-source-video.yml
 
 jobs:
   fetch:
