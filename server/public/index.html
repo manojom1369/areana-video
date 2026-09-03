@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Areana Video — render lab</title>
+    <style>
+      :root {
+        --bg: #0b0a14;
+        --panel: #14121f;
+        --panel-2: #1b1829;
+        --border: #2a2640;
+        --text: #eceaf6;
+        --muted: #9d97b8;
+        --accent: #8b5cf6;
+        --accent-2: #f472b6;
+        --ok: #34d399;
+        --err: #fb7185;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 70% -10%, #1d1640 0%, var(--bg) 55%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        min-height: 100vh;
+      }
+      header {
+        padding: 28px 40px 18px;
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      header h1 { font-size: 20px; margin: 0; letter-spacing: 0.2px; }
+      header h1 em {
+        font-style: normal;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      header .sub { color: var(--muted); font-size: 13px; }
+      main { display: grid; grid-template-columns: 420px 1fr; gap: 28px; padding: 12px 40px 60px; align-items: start; }
+      @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+      .panel {
+        background: rgba(20, 18, 31, 0.85);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+      }
+      .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin: 0 0 14px; }
+      .tpl-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+      .tpl-buttons button {
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .tpl-buttons button.active { border-color: var(--accent); background: rgba(139, 92, 246, 0.16); }
+      .tpl-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: -6px 0 14px; }
+      .tpl-meta { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+      fieldset { border: none; padding: 0; margin: 0 0 14px; }
+      legend {
+        font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
+        color: var(--accent-2); margin-bottom: 10px; font-weight: 600;
+      }
+      .field { margin-bottom: 12px; }
+      label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 5px; }
+      input[type="text"], textarea {
+        width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+        color: var(--text); border-radius: 9px; padding: 9px 11px; font-size: 13.5px;
+        font-family: inherit; resize: vertical;
+      }
+      input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+      input[type="color"] {
+        width: 100%; height: 38px; border: 1px solid var(--border); border-radius: 9px;
+        background: var(--panel-2); padding: 3px; cursor: pointer;
+      }
+      .color-row { display: flex; gap: 10px; }
+      .color-row .field { flex: 1; }
+      button.primary {
+        width: 100%; border: none; border-radius: 12px; padding: 13px; font-size: 14.5px; font-weight: 700;
+        color: #0b0a14; cursor: pointer;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+      button.primary:disabled { opacity: 0.55; cursor: not-allowed; }
+      button.ghost {
+        background: transparent; border: 1px solid var(--border); color: var(--err);
+        border-radius: 12px; padding: 10px; font-size: 13.5px; cursor: pointer; width: 100%; margin-top: 10px;
+      }
+      .status-box { margin-top: 14px; font-size: 13.5px; }
+      .bar { height: 8px; border-radius: 4px; background: var(--panel-2); overflow: hidden; margin: 8px 0; }
+      .bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.4s; }
+      .status-text { color: var(--muted); font-size: 13px; }
+      .status-text.ok { color: var(--ok); }
+      .status-text.err { color: var(--err); }
+      video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 16/9; }
+      video.vertical { aspect-ratio: 9/16; max-height: 70vh; width: auto; display: block; margin: 0 auto; }
+      .preview-wrap { display: flex; flex-direction: column; gap: 14px; }
+      .download-link {
+        display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+        background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.4);
+        color: var(--ok); border-radius: 10px; padding: 10px 16px; font-size: 13.5px; text-decoration: none;
+      }
+      .placeholder {
+        border: 1px dashed var(--border); border-radius: 12px; color: var(--muted);
+        padding: 90px 30px; text-align: center; font-size: 14px; line-height: 1.7;
+      }
+      .spinner {
+        width: 18px; height: 18px; border-radius: 50%; display: inline-block; vertical-align: -3px; margin-right: 8px;
+        border: 2px solid var(--border); border-top-color: var(--accent); animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .jobs { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+      .job-row { font-size: 12.5px; color: var(--muted); display: flex; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px dashed rgba(42, 38, 64, 0.6); }
+      .job-row b { color: var(--text); font-weight: 600; }
+      .pill { font-size: 11px; border-radius: 99px; padding: 2px 10px; border: 1px solid var(--border); }
+      .pill.done { color: var(--ok); border-color: rgba(52, 211, 153, 0.4); }
+      .pill.failed { color: var(--err); border-color: rgba(251, 113, 133, 0.4); }
+      .pill.running { color: var(--accent-2); border-color: rgba(244, 114, 182, 0.4); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1><em>Areana</em> Video · render lab</h1>
+      <span class="sub">pick a template, tweak the copy, render an MP4</span>
+    </header>
+
+    <main>
+      <div>
+        <div class="panel" id="formPanel">
+          <h2>1 · Template</h2>
+          <div class="tpl-buttons" id="tplButtons"></div>
+          <div class="tpl-desc" id="tplDesc"></div>
+          <div class="tpl-meta" id="tplMeta"></div>
+          <form id="propsForm"></form>
+          <button class="primary" id="renderBtn" disabled>Render video</button>
+          <div class="status-box" id="statusBox"></div>
+        </div>
+
+        <div class="panel" id="jobsPanel">
+          <h2>Recent jobs</h2>
+          <div id="jobsList"></div>
+        </div>
+      </div>
+
+      <div class="preview-wrap">
+        <div class="panel" style="grid-column: 2">
+          <h2>Preview</h2>
+          <div id="previewBox"><div class="placeholder">Create a render job on the left — its progress and result will appear here.</div></div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      "use strict";
+      const $ = (sel) => document.querySelector(sel);
+
+      const state = { templates: [], active: null, jobId: null, pollTimer: null };
+
+      const el = (tag, attrs, ...children) => {
+        const node = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs || {})) {
+          if (k === "class") node.className = v;
+          else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+          else node.setAttribute(k, v);
+        }
+        for (const child of children) {
+          node.append(typeof child === "string" ? document.createTextNode(child) : child);
+        }
+        return node;
+      };
+
+      async function api(path, opts) {
+        const res = await fetch(path, opts);
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+        return body;
+      }
+
+      async function loadTemplates() {
+        const { templates } = await api("/api/templates");
+        state.templates = templates;
+        const box = $("#tplButtons");
+        templates.forEach((t) => {
+          const btn = el("button", { type: "button" }, t.label);
+          btn.onclick = () => selectTemplate(t.id);
+          box.append(btn);
+        });
+        selectTemplate(templates[0].id);
+      }
+
+      function selectTemplate(id) {
+        state.active = id;
+        state.jobId = null;
+        clearInterval(state.pollTimer);
+        $("#previewBox").innerHTML = '<div class="placeholder">Ready — tweak the fields and press "Render video".</div>';
+        $("#jobsPanel").style.display = "block";
+
+        const tpl = state.templates.find((t) => t.id === id);
+        $("#tplDesc").textContent = tpl.description;
+        $("#tplMeta").textContent = `${tpl.width}×${tpl.height} · ${tpl.fps} fps · ${tpl.durationSeconds}s`;
+        document.querySelectorAll("#tplButtons button").forEach((b) => {
+          b.classList.toggle("active", b.textContent === tpl.label);
+        });
+
+        const groups = {};
+        for (const f of tpl.fields) (groups[f.group] ||= []).push(f);
+
+        const form = $("#propsForm");
+        form.innerHTML = "";
+        Object.entries(groups).forEach(([groupName, fields]) => {
+          const fs = el("fieldset");
+          fs.append(el("legend", {}, groupName));
+          for (const f of fields) {
+            const wrap = el("div", { class: "field" });
+            wrap.append(el("label", { for: `f_${f.key}` }, f.label));
+            const value = tpl.defaultProps[f.key] ?? "";
+            if (f.type === "textarea") {
+              wrap.append(el("textarea", { id: `f_${f.key}`, rows: f.key === "headline" ? 2 : 3 }, value));
+            } else if (f.type === "color") {
+              wrap.append(el("input", { type: "color", id: `f_${f.key}`, value }));
+            } else {
+              wrap.append(el("input", { type: "text", id: `f_${f.key}`, value }));
+            }
+            fs.append(wrap);
+          }
+          form.append(fs);
+        });
+
+        $("#renderBtn").disabled = false;
+        $("#statusBox").innerHTML = "";
+      }
+
+      function collectProps() {
+        const tpl = state.templates.find((t) => t.id === state.active);
+        const props = {};
+        for (const f of tpl.fields) {
+          props[f.key] = document.getElementById(`f_${f.key}`).value;
+        }
+        return props;
+      }
+
+      function statusHtml(job) {
+        if (!job) return `<div class="status-text err">Job not found (server restarted?).</div>`;
+        const tpl = state.templates.find((t) => t.id === job.templateId);
+        const label = tpl ? tpl.label : job.templateId;
+        if (job.status === "queued") {
+          return `<div class="status-text"><span class="spinner"></span>Queued…</div>`;
+        }
+        if (job.status === "in-progress") {
+          return `
+            <div class="status-text">Rendering <b>${label}</b>… ${job.progress}%</div>
+            <div class="bar"><div style="width:${job.progress}%"></div></div>`;
+        }
+        if (job.status === "completed") {
+          return `<div class="status-text ok">✓ Done in ${Math.round((job.finishedAt - job.startedAt) / 1000)}s</div>`;
+        }
+        return `<div class="status-text err">✗ Failed: ${(job.error || "unknown error").replace(/</g, "&lt;")}</div>`;
+      }
+
+      function showVideo(job) {
+        const box = $("#previewBox");
+        const vertical = state.templates.find((t) => t.id === job.templateId)?.height > 1000;
+        box.innerHTML = "";
+        const video = el("video", { controls: true, autoplay: true, loop: true, class: vertical ? "vertical" : "" });
+        video.src = job.downloadUrl;
+        box.append(video);
+        const link = el("a", { class: "download-link", href: job.downloadUrl, download: `${job.templateId}.mp4` }, "⬇ Download MP4");
+        box.append(link);
+      }
+
+      async function pollJob(jobId) {
+        const { job } = await api(`/api/jobs/${jobId}`);
+        $("#statusBox").innerHTML = statusHtml(job);
+        if (job.status === "completed") {
+          clearInterval(state.pollTimer);
+          state.jobId = null;
+          $("#renderBtn").disabled = false;
+          $("#renderBtn").textContent = "Render video";
+          showVideo(job);
+        } else if (job.status === "failed") {
+          clearInterval(state.pollTimer);
+          state.jobId = null;
+          $("#renderBtn").disabled = false;
+          $("#renderBtn").textContent = "Render video";
+        } else if (job.status === "queued" || job.status === "in-progress") {
+          // keep polling
+        }
+      }
+
+      async function startJob() {
+        $("#renderBtn").disabled = true;
+        $("#renderBtn").textContent = "Rendering…";
+        $("#statusBox").innerHTML = '<div class="status-text"><span class="spinner"></span>Starting job…</div>';
+        try {
+          const props = collectProps();
+          const { jobId } = await api("/api/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ templateId: state.active, props }),
+          });
+          state.jobId = jobId;
+          clearInterval(state.pollTimer);
+          state.pollTimer = setInterval(() => pollJob(jobId).catch(showPollError), 900);
+          pollJob(jobId).catch(showPollError);
+          refreshJobs();
+        } catch (err) {
+          $("#statusBox").innerHTML = `<div class="status-text err">✗ ${err.message}</div>`;
+          $("#renderBtn").disabled = false;
+          $("#renderBtn").textContent = "Render video";
+        }
+      }
+
+      function showPollError(err) {
+        clearInterval(state.pollTimer);
+        $("#statusBox").innerHTML = `<div class="status-text err">✗ ${err.message}</div>`;
+        $("#renderBtn").disabled = false;
+        $("#renderBtn").textContent = "Render video";
+      }
+
+      async function refreshJobs() {
+        try {
+          const { jobs } = await api("/api/jobs");
+          const box = $("#jobsList");
+          box.innerHTML = "";
+          jobs.slice(0, 8).forEach((job) => {
+            const pillClass = job.status === "completed" ? "done" : job.status === "failed" ? "failed" : "running";
+            const row = el("div", { class: "job-row" });
+            row.append(el("span", { class: `pill ${pillClass}` }, job.status));
+            row.append(el("b", {}, job.templateId));
+            row.append(document.createTextNode(
+              job.status === "in-progress" ? `${job.progress}%` : job.status === "completed" ? "done" : "",
+            ));
+            if (job.status === "in-progress" || job.status === "queued") {
+              const cancelBtn = el("button", { class: "ghost", style: "width:auto;padding:2px 10px;margin:0;font-size:11px" }, "cancel");
+              cancelBtn.onclick = async () => {
+                await api(`/api/jobs/${job.id}`, { method: "DELETE" });
+                refreshJobs();
+              };
+              row.append(cancelBtn);
+            }
+            box.append(row);
+          });
+        } catch {
+          /* server may be starting */
+        }
+      }
+
+      $("#renderBtn").onclick = startJob;
+
+      loadTemplates().catch((err) => {
+        $("#formPanel").innerHTML = `<div class="status-text err">Could not load templates: ${err.message}</div>`;
+      });
+      refreshJobs();
+      setInterval(refreshJobs, 4000);
+    </script>
+  </body>
+</html>
