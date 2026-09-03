@@ -6,7 +6,7 @@ import { fract } from './util.js';
 import { parseLyricText, autoTime, projectDuration } from './lyrics.js';
 import { DEMO_LYRICS, DEMO_TITLE, DEFAULT_SETTINGS } from './demo.js';
 
-const STORE_KEY = 'kinetic-lyric-studio-v1';
+const STORE_KEY = 'kinetic-lyric-studio-v2';
 
 const transport = new Transport();
 const engine = new Engine(document.getElementById('stage'));

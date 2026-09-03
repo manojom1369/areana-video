@@ -29,7 +29,7 @@ python3 -m http.server 8000
 
 | # | Style | Look |
 |---|-------|------|
-| 1 | **Punch** | words slam in with overshoot scale, active word pops on beat |
+| 1 | **Punch** | words slam in with squash & stretch, shockwave rings + spark bursts on `*emphasis*`, ghost echo, hard shadow |
 | 2 | **Blur Focus** | Apple-Music-style blur → pull-into-focus per word |
 | 3 | **Glitch** | RGB channel split + torn slices on the active word |
 | 4 | **Neon Wave** | per-letter glow, letters rise as they're sung |

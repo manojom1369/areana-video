@@ -14,9 +14,11 @@ function eachWord(lay, fn) {
   for (const row of lay.rows) for (const item of row.words) fn(item, gi++);
 }
 
-// ─── 1. PUNCH — words slam in with overshoot, active word pops ────────────────
+// ─── 1. PUNCH — words slam in with overshoot, active word pops on the beat ────
+// Impact package: squash & stretch on landing, shockwave ring, spark burst +
+// speed-lines on emphasized words, ghost motion-echo, hard offset shadow.
 const punch = {
-  id: 'punch', name: 'Punch', blurb: 'Hard-hitting word slams · hip-hop / EDM',
+  id: 'punch', name: 'Punch', blurb: 'Slams + shockwaves · hip-hop / EDM',
   draw(ctx, I) {
     const { t, pulse, lay, W, enter, exit } = I;
     const a = groupAlpha(I);
@@ -30,22 +32,102 @@ const punch = {
     ctx.translate(-W / 2, -lay.centerY);
     ctx.textAlign = 'center';
     I.font(lay.size);
-    eachWord(lay, (item) => {
+
+    eachWord(lay, (item, wi) => {
       const w = item.w, p = wordP(w, t);
-      const hot = (w.emph || w.caps);
-      let scale = 1, alpha = 0.30, fill = I.text, dy = 0, rot = 0;
+      const hot = !!(w.emph || w.caps);
+      const cx = item.x + item.px / 2, cy = item.y;
+
+      // impact envelopes
+      const hitE = 1 - easeOutExpo(Math.min(1, p / 0.55));   // slam energy
+      const squash = Math.max(0, 1 - p / 0.28);               // landing squash
+      const rng = mulberry32((wi + 1) * 733 + Math.floor((w.t + 0.31) * 97));
+
+      let scale = hot ? 1.05 : 1, alpha = 0.30, fill = I.text, dy = 0, rot = 0;
       if (isActive(w, t)) {
-        scale = 1 + 0.42 * (1 - easeOutExpo(p)) + 0.05 * pulse;
+        scale = (1 + 0.55 * hitE + 0.05 * pulse) * (hot ? 1.05 : 1);
         alpha = 0.35 + 0.65 * easeOutCubic(p);
-        dy = (1 - easeOutExpo(p)) * lay.size * 0.14;
-        rot = (1 - easeOutExpo(p)) * -0.045;
+        dy = -lay.size * 0.22 * hitE;
+        rot = (wi % 2 ? 1 : -1) * 0.05 * hitE * (hot ? 1.4 : 1);
         fill = hot ? I.accent : I.text;
       } else if (isSung(w, t)) {
         alpha = 1; fill = hot ? I.accent : I.text;
       }
+      const sx = scale * (1 + 0.10 * squash);
+      const sy = scale * (1 - 0.16 * squash);
+
+      // ── shockwave ring + fan lines + sparks (behind text) ──
+      if (isActive(w, t) && p < 0.6) {
+        const q = p / 0.6;
+        const rx = item.px / 2 + lay.size * (0.25 + 0.85 * q);
+        const ry = lay.size * (0.5 + 0.6 * q);
+        ctx.save();
+        ctx.translate(cx, cy + dy);
+        ctx.globalAlpha = a * (1 - q) * (hot ? 0.55 : 0.26);
+        ctx.strokeStyle = hot ? I.accent : I.text;
+        ctx.lineWidth = Math.max(1, lay.size * 0.055 * (1 - q));
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
+        ctx.stroke();
+        if (hot) {
+          // speed-lines fanning off the hit
+          ctx.globalAlpha = a * (1 - q) * 0.4;
+          ctx.lineWidth = Math.max(1, lay.size * 0.03);
+          for (let s = 0; s < 7; s++) {
+            const ang = (s / 7) * TAU + rng() * 0.5;
+            const r0 = rx * 0.95;
+            const r1 = r0 + lay.size * (0.12 + 0.22 * rng()) * (1 - q);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(ang) * r0, Math.sin(ang) * ry * 0.95);
+            ctx.lineTo(Math.cos(ang) * r1, Math.sin(ang) * ry * 1.05);
+            ctx.stroke();
+          }
+          // spark burst
+          const q2 = Math.min(1, p / 0.5);
+          ctx.fillStyle = I.accent;
+          for (let s = 0; s < 6; s++) {
+            const ang = rng() * TAU;
+            const dist = lay.size * (0.3 + 0.9 * q2);
+            ctx.globalAlpha = a * (1 - q2) * 0.7;
+            ctx.beginPath();
+            ctx.arc(Math.cos(ang) * dist, Math.sin(ang) * dist * 0.55,
+              Math.max(1, lay.size * 0.028 * (1 - q2)), 0, TAU);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      // ── ghost motion-echo while slamming ──
+      if (hitE > 0.06) {
+        ctx.save();
+        ctx.translate(cx, cy + dy * 1.35);
+        ctx.rotate(rot * 1.4);
+        ctx.scale(sx * 1.14, sy * 1.14);
+        ctx.globalAlpha = a * 0.16 * hitE;
+        ctx.fillStyle = fill;
+        ctx.fillText(item.text, 0, 0);
+        ctx.restore();
+      }
+
+      // ── hard offset shadow ──
+      if (alpha > 0.5) {
+        const off = lay.size * 0.045 + 3 + pulse * 2;
+        ctx.save();
+        ctx.translate(cx + off * 0.55, cy + dy + off);
+        ctx.rotate(rot);
+        ctx.scale(sx, sy);
+        ctx.globalAlpha = a * 0.5 * alpha;
+        ctx.fillStyle = hot ? rgba(I.accent, 0.55) : 'rgba(0,0,0,0.5)';
+        ctx.fillText(item.text, 0, 0);
+        ctx.restore();
+      }
+
+      // ── main pass ──
       ctx.save();
-      ctx.translate(item.x + item.px / 2, item.y + dy);
-      ctx.rotate(rot); ctx.scale(scale, scale);
+      ctx.translate(cx, cy + dy);
+      ctx.rotate(rot);
+      ctx.scale(sx, sy);
       ctx.globalAlpha = a * alpha;
       ctx.fillStyle = fill;
       ctx.fillText(item.text, 0, 0);

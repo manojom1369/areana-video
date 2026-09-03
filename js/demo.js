@@ -29,7 +29,7 @@ export const DEFAULT_SETTINGS = {
   palette: { bg1: '#070b18', bg2: '#101a38', accent: '#6ee7ff', text: '#f2f6ff' },
   motion: {
     bpm: 102, offsetSec: 0.65, barsPerLine: 1,
-    zoom: 0.035, shake: 0.10, enterMs: 240, exitMs: 260,
+    zoom: 0.04, shake: 0.12, enterMs: 220, exitMs: 260,
     reactive: false, demoBeat: true,
   },
 };
