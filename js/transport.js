@@ -129,20 +129,22 @@ export class Transport {
   _scheduleSynth() {
     if (!this.playing || !this.synthOn) return;
     const beatDur = 60 / this.bpm;
+    const eighth = beatDur / 2;
     const now = this.ctx.currentTime;
-    // map transport time → audio context time
     const tAhead = this.time + 0.18;
     while (this._nextBeat < tAhead) {
-      const when = now + (this._nextBeat - this.time);
-      const idx = Math.round((this._nextBeat - this.offset) / beatDur);
-      if (when >= now - 0.02 && this._nextBeat >= this.offset - 0.001 && idx >= 0) {
-        const inBar = ((idx % 4) + 4) % 4;
-        if (inBar === 0 || inBar === 2) this._kick(when, inBar === 0 ? 1 : 0.8);
-        if (inBar === 1 || inBar === 3) this._snare(when, 0.5);
-        this._hat(when + beatDur / 2, 0.22);
-        if (inBar === 0 && idx % 8 === 0) this._hat(when + beatDur * 0.75, 0.16);
+      const when = now + Math.max(0, this._nextBeat - this.time);
+      const h = Math.round((this._nextBeat - this.offset) / eighth); // half-beat index
+      if (this._nextBeat >= this.offset - 0.001 && h >= 0) {
+        const inBar = Math.floor(h / 2) % 4;
+        if (h % 2 === 0) { // quarter notes: kick / snare backbeat
+          if (inBar === 0 || inBar === 2) this._kick(when, inBar === 0 ? 1 : 0.82);
+          else this._snare(when, 0.5);
+        }
+        this._hat(when, h % 2 ? 0.22 : 0.10); // hats on every eighth, accent offbeat
+        if (inBar === 0 && h % 8 === 0) this._hat(when + eighth * 0.75, 0.16);
       }
-      this._nextBeat += beatDur / 2; // schedule at 8th-note resolution
+      this._nextBeat += eighth;
     }
   }
 
