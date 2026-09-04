@@ -89,7 +89,13 @@ main() {
         codex_install
       else
         err "Neither 'claude' nor 'codex' was found on PATH."
-        err "Run this script on a machine that has Claude Code 2.x or Codex installed."
+        err ""
+        err "This also means we are likely in a web/remote sandbox, which cannot"
+        err "install ChatCut into your local machine or complete its browser login."
+        err ""
+        err "Open a terminal on the machine where you want to edit videos and run:"
+        err "  ./scripts/setup-chatcut.sh"
+        err "or run the install/login commands from the README manually."
         exit 1
       fi
       ;;
