@@ -23,13 +23,22 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import imageio_ffmpeg
 
 # ---------------------------------------------------------------- config ----
-W, H = 1920, 1080
 FPS = 30
 BEAT = 0.52            # seconds per word pop
 LINE_GAP = 0.35
 INTRO_T = 1.2
 OUTRO_T = 1.6
 SS = 2                 # supersample factor for sprite rendering
+
+PROFILES = {
+    "landscape": dict(W=1920, H=1080, maxw=1720, center_y=560,  pitch=1.55,
+                      out="kila_kila_kinetic_lyrics.mp4"),
+    "vertical":  dict(W=1080, H=1920, maxw=980,  center_y=1020, pitch=1.75,
+                      out="kila_kila_kinetic_lyrics_9x16.mp4"),
+}
+PROFILE = "landscape"
+_p = PROFILES[PROFILE]
+W, H = _p["W"], _p["H"]
 
 FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "fonts", "AlexBrush-Regular.ttf")
 FONT_PATH = os.path.abspath(FONT_PATH)
@@ -76,7 +85,7 @@ BG_BOT = np.array([8, 4, 18], dtype=np.float32)
 
 
 # ---------------------------------------------------------------- timing ----
-def build_timing():
+def build_words():
     words = []
     lines = []
     t = INTRO_T
@@ -94,7 +103,101 @@ def build_timing():
     return words, lines, total
 
 
-WORDS, LINES, TOTAL_T = build_timing()
+WORDS, LINES, TOTAL_T = build_words()
+
+
+def _word_widths(toks):
+    f = font(BASE_FONT_SIZE)
+    sw_b = int(BASE_FONT_SIZE * BOLD_FRAC)
+    gap = int(BASE_FONT_SIZE * 0.40)
+    widths = []
+    for w in toks:
+        bb = f.getbbox(w["raw"], stroke_width=sw_b)
+        widths.append((bb[2] - bb[0]) + sw_b)
+    return widths, gap
+
+
+def build_groups():
+    """Wrap each lyric line into display rows that fit the frame width."""
+    groups = []
+    max_w = PROFILES[PROFILE]["maxw"]
+    for line_idxs in LINES:
+        toks = [WORDS[i] for i in line_idxs]
+        widths, gap = _word_widths(toks)
+        chunk, cur, n_in = [], 0.0, 0
+        for w, ww in zip(toks, widths):
+            add = ww + (gap if n_in else 0)
+            if chunk and (cur + add) > max_w:
+                groups.append(chunk)
+                chunk, cur, n_in = [], 0.0, 0
+                add = ww
+            chunk.append(w)
+            cur += add
+            n_in += 1
+        if chunk:
+            groups.append(chunk)
+    gi = 0
+    for g in groups:
+        for w in g:
+            w["group"] = gi
+        gi += 1
+    return groups
+
+
+def set_profile(name):
+    """Switch aspect ratio / layout (clears all size-dependent caches)."""
+    global PROFILE, W, H, GROUPS, N_FRAMES, BOKEH
+    PROFILE = name
+    cfg = PROFILES[name]
+    W, H = cfg["W"], cfg["H"]
+    _font_cache.clear()
+    word_sprite.cache_clear()
+    reflection.cache_clear()
+    _transform_cache.clear()
+    base_background.cache_clear()
+    stage_glows.cache_clear()
+    vignette.cache_clear()
+    bokeh_disk.cache_clear()
+    _geom_cache.clear()
+    GROUPS = build_groups()
+    # re-seed bokeh for the new canvas
+    r = np.random.default_rng(7)
+    BOKEH = []
+    for i in range(46 if name == "landscape" else 34):
+        BOKEH.append({
+            "x": r.uniform(0, W), "y": r.uniform(0, H),
+            "r": r.uniform(18, 120 if name == "landscape" else 95),
+            "phase": r.uniform(0, math.tau), "speed": r.uniform(0.15, 0.5),
+            "col": r.choice([(255, 190, 90), (255, 90, 190), (120, 170, 255),
+                             (180, 120, 255), (255, 230, 150)]),
+            "a": r.uniform(18, 70),
+        })
+    N_FRAMES = int(math.ceil(TOTAL_T * FPS))
+
+
+GROUPS = None   # initialized after font() is defined (bottom of module)
+_geom_cache = {}
+
+
+def group_geom(gi):
+    """Return (scale, [(word, x_left, width_scaled), ...]) for a display row."""
+    if gi in _geom_cache:
+        return _geom_cache[gi]
+    toks = GROUPS[gi]
+    widths, gap = _word_widths(toks)
+    scale = min(1.0, PROFILES[PROFILE]["maxw"] /
+                (sum(widths) + gap * (len(toks) - 1)))
+    gap_s = gap * scale
+    total = sum(widths) * scale + gap_s * (len(toks) - 1)
+    x = (W - total) / 2
+    layout = []
+    for w, ww in zip(toks, widths):
+        layout.append((w, x, ww * scale))
+        x += ww * scale + gap_s
+    _geom_cache[gi] = (scale, layout)
+    return _geom_cache[gi]
+
+
 N_FRAMES = int(math.ceil(TOTAL_T * FPS))
 
 
@@ -119,6 +222,9 @@ def font(size):
     return _font_cache[size]
 
 
+GROUPS = build_groups()   # now that font() exists
+
+
 def vgrad(w, h, c_top, c_bot):
     g = np.zeros((h, w, 4), dtype=np.uint8)
     for i in range(3):
@@ -129,15 +235,31 @@ def vgrad(w, h, c_top, c_bot):
 
 
 def make_word_sprite(text, kind="normal", size=BASE_FONT_SIZE):
-    """kind: normal | hot | dim | hotdim -> returns RGBA sprite (SS supersampled)."""
+    """kind: normal | hot | dim | hotdim -> returns RGBA sprite (SS supersampled).
+
+    Layout is deterministic across kinds: the visible word (face + extrusion) is
+    centred in a fixed-size box, so glowing and non-glowing variants share the
+    same anchor point and size.
+    """
     f = font(size * SS)
-    tb = f.getbbox(text, stroke_width=0)
+    sw = int(size * BOLD_FRAC) * SS
+    tb = f.getbbox(text, stroke_width=sw)
     tw, th = tb[2] - tb[0], tb[3] - tb[1]
     depth = int(14 * SS * (size / BASE_FONT_SIZE))
-    pad = 90 * SS
-    cw, ch = tw + 2 * pad + depth, th + 2 * pad + depth
+    ox, oy = 13 * SS, 14 * SS        # extrusion offset direction
 
-    img = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    # body box contains the extrusion; extra halo box holds the glow
+    body_w = tw + abs(ox) + 2 * sw
+    body_h = th + abs(oy) + 2 * sw
+    halo = 44 * SS
+    cw = body_w + 2 * halo
+    ch = body_h + 2 * halo
+
+    # text pen origin so the body is centred in the canvas
+    body_x = (cw - body_w) // 2
+    body_y = (ch - body_h) // 2
+    tx = body_x - tb[0]
+    ty = body_y - tb[1]
 
     if kind == "hot":
         top, bot, stop, sbot, stroke = PINK_TOP, PINK_BOT, PINK_SIDE_TOP, PINK_SIDE_BOT, PINK_STROKE
@@ -148,21 +270,19 @@ def make_word_sprite(text, kind="normal", size=BASE_FONT_SIZE):
     else:
         top, bot, stop, sbot, stroke = GOLD_TOP, GOLD_BOT, GOLD_SIDE_TOP, GOLD_SIDE_BOT, GOLD_STROKE
 
-    tx, ty = pad - tb[0], pad - tb[1]
+    img = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
 
-    # --- glow (hot words and a subtle one on normal) ---
-    sw = int(size * BOLD_FRAC) * SS
+    # --- glow (hot / normal only), rendered behind everything ---
     if kind in ("hot", "normal"):
         glow = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
         gd = ImageDraw.Draw(glow)
-        glow_col = (255, 110, 200, 130) if kind == "hot" else (255, 200, 90, 70)
+        glow_col = (255, 110, 200, 120) if kind == "hot" else (255, 200, 90, 60)
         gd.text((tx, ty), text, font=f, fill=glow_col,
-                stroke_width=sw + 4 * SS, stroke_fill=glow_col)
-        glow = glow.filter(ImageFilter.GaussianBlur(26 * SS))
+                stroke_width=sw + 6 * SS, stroke_fill=glow_col)
+        glow = glow.filter(ImageFilter.GaussianBlur(30 * SS))
         img.alpha_composite(glow)
 
-    # --- extruded sides (draw dark layers along the offset direction) ---
-    ox, oy = 12 * SS, 13 * SS
+    # --- extruded sides (dark gradient layers toward the offset direction) ---
     side_grad = vgrad(cw, ch, stop, sbot)
     side_mask = Image.new("L", (cw, ch), 0)
     smd = ImageDraw.Draw(side_mask)
@@ -186,25 +306,22 @@ def make_word_sprite(text, kind="normal", size=BASE_FONT_SIZE):
     face_grad = vgrad(cw, ch, top, bot)
     face = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     face.paste(face_grad, (0, 0), face_mask)
-    # glossy specular band across the top third
-    gloss = Image.new("L", (cw, ch), 0)
-    gd2 = ImageDraw.Draw(gloss)
-    gd2.text((tx, ty), text, font=f, fill=120,
-             stroke_width=sw, stroke_fill=120)
-    band = Image.new("RGBA", (cw, ch), (255, 255, 255, 0))
-    band_arr = np.zeros((ch, cw, 4), dtype=np.uint8)
-    band_alpha = np.clip(np.linspace(110, 0, ch // 2).repeat(cw).reshape(ch // 2, cw), 0, 110).astype(np.uint8)
-    band_arr[: ch // 2, :, 3] = band_alpha
-    band = Image.fromarray(band_arr, "RGBA")
-    band.putalpha(Image.composite(band.split()[3], Image.new("L", (cw, ch), 0), gloss))
-    face.alpha_composite(band)
+    # glossy specular band across the top half of the visible glyphs
+    band = Image.new("L", (cw, ch), 0)
+    band_np = np.zeros((ch, cw), dtype=np.float32)
+    top_y = max(0, ty + tb[1])
+    bh = int(th * 0.85)
+    if bh > 0 and top_y < ch:
+        bh = min(bh, ch - top_y)
+        band_np[top_y:top_y + bh, :] = np.linspace(120, 0, bh)[:, None]
+    band = Image.fromarray(band_np.clip(0, 120).astype(np.uint8), "L")
+    band = Image.composite(band, Image.new("L", (cw, ch), 0), face_mask)
+    band_rgba = Image.new("RGBA", (cw, ch), (255, 255, 255, 0))
+    band_rgba.putalpha(band)
+    face.alpha_composite(band_rgba)
     img.alpha_composite(face)
 
-    # downscale -> target res
-    out = img.resize((cw // SS, ch // SS), Image.LANCZOS)
-    # autocrop
-    bbox = out.getbbox()
-    return out.crop(bbox)
+    return img.resize((cw // SS, ch // SS), Image.LANCZOS)
 
 
 @lru_cache(maxsize=None)
@@ -230,31 +347,24 @@ def reflection(key, text):
 
 
 # ------------------------------------------------------------- layout ------
-def line_metrics(words_idxs):
-    toks = [WORDS[i] for i in words_idxs]
-    f = font(BASE_FONT_SIZE)
-    sw = int(BASE_FONT_SIZE * BOLD_FRAC)
-    gap = int(BASE_FONT_SIZE * 0.40)
-    widths = []
-    for w in toks:
-        bb = f.getbbox(w["raw"], stroke_width=sw)
-        widths.append(bb[2] - bb[0] + sw)   # include faux-bold expansion
-    total = sum(widths) + gap * (len(toks) - 1)
-    max_width = 1720
-    scale = min(1.0, max_width / total)
-    gap_s = gap * scale
-    total_s = sum(widths) * scale + gap_s * (len(toks) - 1)
-    x = (W - total_s) / 2
-    layout = []
-    for w, ww in zip(toks, widths):
-        layout.append((w, x, ww * scale))
-        x += ww * scale + gap_s
-    return layout, scale
+def _anchor_row(t):
+    """Index of the group whose words are currently being sung (last word)."""
+    gi = 0
+    for i, g in enumerate(GROUPS):
+        if t >= g[0]["t"]:
+            gi = i
+    return gi
 
 
-LINE_LAYOUT = [line_metrics(li) for li in LINES]
-LINE_Y = 560
-BASELINE = 790   # floor for reflections
+def row_y(gi, t):
+    """Vertical center of a display row.
+
+    Landscape: all rows fanned around the vertical center.
+    Vertical: the active row is pinned at center_y; sung rows slide up.
+    """
+    pitch = BASE_FONT_SIZE * PROFILES[PROFILE]["pitch"]
+    anchor = _anchor_row(t)
+    return PROFILES[PROFILE]["center_y"] + (gi - anchor) * pitch
 
 
 # ------------------------------------------------------------ background ----
@@ -382,12 +492,9 @@ def word_state(w, t):
     if dt < 0:
         return None
     accent = w["text"] in ACCENT_WORDS
-    li = w["line"]
-    idxs = LINES[li]
-    my_pos = next(k for k, j in enumerate(idxs) if WORDS[j] is w)
-    next_t = WORDS[idxs[my_pos + 1]]["t"] if my_pos + 1 < len(idxs) else t + 99
-    line_end = WORDS[idxs[-1]]["t"] + 0.55
-
+    gtoks = GROUPS[w["group"]]
+    my_pos = next(k for k, kk in enumerate(gtoks) if kk is w)
+    next_t = gtoks[my_pos + 1]["t"] if my_pos + 1 < len(gtoks) else t + 99
     if dt < 0.34:                       # pop
         p = clamp01(dt / 0.34)
         e = ease_out_back(p)
@@ -396,16 +503,11 @@ def word_state(w, t):
         alpha = clamp01(p * 2.4)
         return ("hot" if accent else "normal", scale, angle, alpha, True)
 
-    # line exit
-    if t > line_end:
-        ep = clamp01((t - line_end) / 0.28)
-        kind = "hotdim" if accent else "dim"
-        return (kind, 1.0 - 0.06 * ep, 0, 1 - ep, False)
-
     active = t < next_t
     pulse = 1.0 + 0.03 * math.sin(t * 6.0 + w["t"])
     if active:
         return ("hot" if accent else "normal", pulse, 0, 1.0, True)
+    # earlier word in the current row -> muted; full-row fade is handled by group vis
     return ("hotdim" if accent else "dim", 0.99, 0, 0.92, False)
 
 
@@ -413,14 +515,18 @@ def render_frame(t, frame_idx):
     im = make_background(frame_idx)
     draw_bokeh(im, t)
 
-    # which lines are visible
-    for li, (layout, lscale) in enumerate(LINE_LAYOUT):
-        idxs = LINES[li]
-        first_t = WORDS[idxs[0]]["t"]
-        last_t = WORDS[idxs[-1]]["t"]
-        if t < first_t - 0.1:
+    # which display rows are visible (keep past rows alive while on-screen)
+    for gi, gtoks in enumerate(GROUPS):
+        first_t = gtoks[0]["t"]
+        last_t = gtoks[-1]["t"]
+        if t < first_t - 0.1 or t > last_t + BEAT * 3:
             continue
-        if t > last_t + 1.0:
+
+        lscale, layout = group_geom(gi)
+        cy = row_y(gi, t)
+        off = gi - _anchor_row(t)
+        vis = {0: 1.0, -1: 0.80, 1: 0.85, -2: 0.45}.get(off, 0.0)
+        if vis <= 0.01:
             continue
 
         for w, cx, ww in layout:
@@ -428,24 +534,24 @@ def render_frame(t, frame_idx):
             if st is None:
                 continue
             kind, scale, angle, alpha, active = st
+            alpha *= vis
 
             spr = word_sprite(kind, w["raw"])
-            size_s = BASE_FONT_SIZE * lscale
-            spr_scale = (size_s / BASE_FONT_SIZE) * scale
+            spr_scale = lscale * scale
             spr_t = get_transformed(spr, spr_scale, angle)
             sw, sh = spr_t.size
 
-            # anchor: word bottom sits on a common baseline (LINE_Y), horizontally centered
+            # center-anchored: sprite centroid at (row center x, row center y)
             px = int(cx + ww / 2 - sw / 2)
-            bottom_y = LINE_Y + int(70 * lscale * scale)
-            py = bottom_y - sh
+            py = int(cy - sh / 2)
 
-            # floor reflection: only when the word is upright (avoids rotated artifact)
-            if alpha > 0.35 and abs(angle) < 0.6:
+            # floor reflection: only the active (center) row, and only when the
+            # word is upright — keeps stacked rows uncluttered
+            if off == 0 and alpha > 0.35 and abs(angle) < 0.6:
                 refl = get_transformed(reflection(kind, w["raw"]), spr_scale, 0)
                 rw, rh = refl.size
                 rx = int(cx + ww / 2 - rw / 2)
-                ry = bottom_y - 2          # tight under the word
+                ry = int(cy + sh / 2 - 4)
                 if alpha < 1.0:
                     ra = refl.split()[3].point(lambda p: int(p * alpha))
                     refl = refl.copy(); refl.putalpha(ra)
@@ -458,18 +564,19 @@ def render_frame(t, frame_idx):
             im.alpha_composite(layer, (px, py))
 
     # beat flash
+    fsize = int(min(W, H) * 0.65)
     for w in WORDS:
         dt = t - w["t"]
         if 0 <= dt < 0.22:
             a = (1 - dt / 0.22)
-            fs = flash_sprite().resize((700, 700), Image.LANCZOS)
+            fs = flash_sprite().resize((fsize, fsize), Image.LANCZOS)
             fa = fs.split()[3].point(lambda p: int(p * 0.5 * a))
             fs = fs.copy(); fs.putalpha(fa)
-            li = w["line"]
-            layout, lscale = LINE_LAYOUT[li]
+            gi = w["group"]
+            _, layout = group_geom(gi)
             ent = next(e for e in layout if e[0] is w)
-            fx = int(ent[1] + ent[2] / 2 - 350)
-            fy = int(LINE_Y - 350)
+            fx = int(ent[1] + ent[2] / 2 - fsize / 2)
+            fy = int(row_y(gi, t) - fsize / 2)
             im.alpha_composite(fs, (fx, fy))
 
     # light sweep
@@ -620,17 +727,18 @@ def synth_audio(path):
 
 
 # ------------------------------------------------------------------ main ----
-def main():
+def render_profile(name):
+    set_profile(name)
     out_dir = os.path.join(os.path.dirname(__file__), "..", "output")
     out_dir = os.path.abspath(out_dir)
     os.makedirs(out_dir, exist_ok=True)
-    silent = os.path.join(out_dir, "_silent.mp4")
-    wav = os.path.join(out_dir, "_beat.wav")
-    final = os.path.join(out_dir, "kila_kila_kinetic_lyrics.mp4")
+    silent = os.path.join(out_dir, f"_silent_{name}.mp4")
+    wav = os.path.join(out_dir, f"_beat_{name}.wav")
+    final = os.path.join(out_dir, PROFILES[name]["out"])
 
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
 
-    print(f"Total duration: {TOTAL_T:.1f}s, frames: {N_FRAMES}")
+    print(f"[{name}] {W}x{H} | {TOTAL_T:.1f}s | {N_FRAMES} frames")
     cmd = [ffmpeg, "-y", "-f", "rawvideo", "-vcodec", "rawvideo",
            "-s", f"{W}x{H}", "-pix_fmt", "rgb24", "-r", str(FPS),
            "-i", "pipe:0",
@@ -658,6 +766,12 @@ def main():
     os.remove(silent)
     os.remove(wav)
     print("Done:", final)
+
+
+def main():
+    profiles = sys.argv[1:] or ["landscape"]
+    for name in profiles:
+        render_profile(name)
 
 
 if __name__ == "__main__":

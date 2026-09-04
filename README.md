@@ -5,8 +5,11 @@ extruded gold 3D letters, glossy faces, floor reflections, bokeh stage lights,
 beat-synced camera shake/flashes, and a synthesized drum-and-bass groove that
 drives the animation.
 
-- Output: `output/kila_kila_kinetic_lyrics.mp4` — 1920×1080, 30 fps, H.264 + AAC
-- Renderer: `src/lyric_video.py`
+- Outputs (1920×1080 and 1080×1920, 30 fps, H.264 + AAC):
+  - `output/kila_kila_kinetic_lyrics.mp4` — landscape 16:9
+  - `output/kila_kila_kinetic_lyrics_9x16.mp4` — vertical 9:16 (Reels/Shorts), word rows
+    auto-wrap and the active row stays centered with a karaoke-style scroll
+- Renderer: `src/lyric_video.py` — render with `python src/lyric_video.py [vertical] [landscape]`
 - Font: **Alex Brush** (OFL) with a faux-bold stroke (`BOLD_FRAC`), matched to the
   reference's bold flowing brush-script style with swash capitals. Alternatives
   (Playball, Pacifico, Great Vibes, Anton, Bungee…) are in `assets/fonts/`.

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kila Kila — 3D Kinetic Lyrics</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0a0413; color:#f5e9ff; font-family:'Segoe UI',system-ui,sans-serif;
+         min-height:100vh; display:flex; flex-direction:column; align-items:center;
+         gap:22px; padding:28px 16px; }
+  h1 { font-size:clamp(20px,3vw,30px); font-weight:700; text-align:center;
+       background:linear-gradient(90deg,#ffd76e,#ff5fb0); -webkit-background-clip:text;
+       background-clip:text; color:transparent; }
+  .cards { display:flex; flex-wrap:wrap; gap:22px; justify-content:center; width:100%; max-width:1150px; }
+  .card { background:linear-gradient(180deg,#170a2c,#0e0519); border-radius:16px;
+          padding:16px; width:min(520px,94vw);
+          box-shadow:0 20px 60px rgba(255,120,200,.18), 0 0 0 1px rgba(255,215,110,.3); }
+  .card h2 { font-size:17px; margin-bottom:10px; letter-spacing:.3px; color:#ffe6b3; display:flex; justify-content:space-between; align-items:center; }
+  .badge { font-size:11px; background:#ff5fb0; color:#1a0420; padding:3px 9px; border-radius:999px; font-weight:700; }
+  .card.vert video { max-height:70vh; width:auto; margin:0 auto; display:block; }
+  video { width:100%; border-radius:10px; background:#000; }
+  .dl { display:inline-block; margin-top:12px; text-decoration:none; font-weight:700; font-size:14px;
+        padding:10px 18px; border-radius:999px; color:#1a0420;
+        background:linear-gradient(90deg,#ffd76e,#ff8fc4); box-shadow:0 6px 20px rgba(255,160,90,.35); }
+  .dl:hover { filter:brightness(1.08); }
+  .path { font-size:12px; opacity:.55; margin-top:8px; word-break:break-all; }
+  p.sub { opacity:.65; font-size:13px; text-align:center; max-width:640px; }
+</style>
+</head>
+<body>
+  <h1>Kila Kila Mani — 3D Kinetic Typography Lyrics</h1>
+  <p class="sub">Bold brush-script type &bull; 3D gold extrusion &bull; beat-synced pops &bull; bokeh stage lights</p>
+  <div class="cards">
+    <div class="card">
+      <h2>Landscape 16:9 <span class="badge">1080p</span></h2>
+      <video src="output/kila_kila_kinetic_lyrics.mp4" controls muted loop playsinline></video>
+      <a class="dl" href="output/kila_kila_kinetic_lyrics.mp4" download>⬇ Download MP4 (16:9)</a>
+      <div class="path">output/kila_kila_kinetic_lyrics.mp4</div>
+    </div>
+    <div class="card vert">
+      <h2>Vertical 9:16 <span class="badge">Reels / Shorts</span></h2>
+      <video src="output/kila_kila_kinetic_lyrics_9x16.mp4" controls muted loop playsinline></video>
+      <a class="dl" href="output/kila_kila_kinetic_lyrics_9x16.mp4" download>⬇ Download MP4 (9:16)</a>
+      <div class="path">output/kila_kila_kinetic_lyrics_9x16.mp4</div>
+    </div>
+  </div>
+  <p class="sub">Direct download links:<br>
+    <a style="color:#ffb3e2" href="output/kila_kila_kinetic_lyrics.mp4">…/output/kila_kila_kinetic_lyrics.mp4</a><br>
+    <a style="color:#ffb3e2" href="output/kila_kila_kinetic_lyrics_9x16.mp4">…/output/kila_kila_kinetic_lyrics_9x16.mp4</a>
+  </p>
+</body>
+</html>
