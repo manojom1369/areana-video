@@ -296,9 +296,49 @@ def draw_stack(frame, txt, p, rng, beat):
 
 
 # ------------------------------------------------------------------ backdrop
+_PLATES = None
+def _plates():
+    """Load the generated cinematic backplates once, oversized for drift."""
+    global _PLATES
+    if _PLATES is None:
+        here = os.path.dirname(os.path.abspath(__file__))
+        out = []
+        for n in ("bg1.jpg", "bg2.jpg"):
+            p = os.path.join(here, "assets", n)
+            if os.path.exists(p):
+                im = Image.open(p).convert("RGB")
+                out.append(im.resize((int(W * 1.18), int(H * 1.18)),
+                                     Image.LANCZOS))
+        _PLATES = out
+    return _PLATES
+
+
 def gen_bg(i):
-    """Fallback animated background when no source video is supplied."""
+    """Animated background: drifting generated plates, else procedural."""
     t = i / FPS
+    pl = _plates()
+    if pl:
+        cyc = 9.0                      # seconds per plate
+        idx = int(t / cyc) % len(pl)
+        nxt = (idx + 1) % len(pl)
+        lp = (t % cyc) / cyc
+
+        def crop(im, ph):
+            # slow ken-burns drift + gentle zoom
+            mx, my = im.width - W, im.height - H
+            x = int(mx * (0.5 + 0.5 * math.sin(ph * 0.9)))
+            y = int(my * (0.5 + 0.5 * math.cos(ph * 0.6)))
+            z = 1.0 + 0.03 * math.sin(ph * 0.4)
+            cw, ch = int(W / z), int(H / z)
+            x = min(x, im.width - cw)
+            y = min(y, im.height - ch)
+            return im.crop((x, y, x + cw, y + ch)).resize((W, H), Image.LANCZOS)
+
+        a = crop(pl[idx], t * 0.35)
+        if lp > 0.86 and len(pl) > 1:          # crossfade into next plate
+            b = crop(pl[nxt], t * 0.35)
+            a = Image.blend(a, b, (lp - 0.86) / 0.14)
+        return a.convert("RGBA")
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     v = (np.sin(xx / 190 + t * 0.7) + np.cos(yy / 150 - t * 0.5)) * 0.5
     r = 18 + 26 * (v + 1)
