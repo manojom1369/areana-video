@@ -31,9 +31,10 @@ INTRO_T = 1.2
 OUTRO_T = 1.6
 SS = 2                 # supersample factor for sprite rendering
 
-FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "fonts", "Anton.ttf")
+FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "fonts", "AlexBrush-Regular.ttf")
 FONT_PATH = os.path.abspath(FONT_PATH)
-BASE_FONT_SIZE = 150
+BASE_FONT_SIZE = 138
+BOLD_FRAC = 0.035        # faux-bold stroke width (fraction of font size) to match the bold brush style
 ACCENT_WORDS = {"hello", "honey"}   # words rendered in hot pink instead of gold
 
 # lyrics ---------------------------------------------------------------
@@ -150,12 +151,13 @@ def make_word_sprite(text, kind="normal", size=BASE_FONT_SIZE):
     tx, ty = pad - tb[0], pad - tb[1]
 
     # --- glow (hot words and a subtle one on normal) ---
+    sw = int(size * BOLD_FRAC) * SS
     if kind in ("hot", "normal"):
         glow = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
         gd = ImageDraw.Draw(glow)
         glow_col = (255, 110, 200, 130) if kind == "hot" else (255, 200, 90, 70)
         gd.text((tx, ty), text, font=f, fill=glow_col,
-                stroke_width=6 * SS, stroke_fill=glow_col)
+                stroke_width=sw + 4 * SS, stroke_fill=glow_col)
         glow = glow.filter(ImageFilter.GaussianBlur(26 * SS))
         img.alpha_composite(glow)
 
@@ -164,7 +166,6 @@ def make_word_sprite(text, kind="normal", size=BASE_FONT_SIZE):
     side_grad = vgrad(cw, ch, stop, sbot)
     side_mask = Image.new("L", (cw, ch), 0)
     smd = ImageDraw.Draw(side_mask)
-    sw = 3 * SS
     for k in range(depth, 0, -1):
         smd.text((tx + ox * k / depth, ty + oy * k / depth), text, font=f,
                  fill=255, stroke_width=sw, stroke_fill=255)
@@ -232,11 +233,12 @@ def reflection(key, text):
 def line_metrics(words_idxs):
     toks = [WORDS[i] for i in words_idxs]
     f = font(BASE_FONT_SIZE)
-    gap = int(BASE_FONT_SIZE * 0.32)
+    sw = int(BASE_FONT_SIZE * BOLD_FRAC)
+    gap = int(BASE_FONT_SIZE * 0.40)
     widths = []
     for w in toks:
-        bb = f.getbbox(w["raw"], stroke_width=0)
-        widths.append(bb[2] - bb[0])
+        bb = f.getbbox(w["raw"], stroke_width=sw)
+        widths.append(bb[2] - bb[0] + sw)   # include faux-bold expansion
     total = sum(widths) + gap * (len(toks) - 1)
     max_width = 1720
     scale = min(1.0, max_width / total)

@@ -7,7 +7,9 @@ drives the animation.
 
 - Output: `output/kila_kila_kinetic_lyrics.mp4` — 1920×1080, 30 fps, H.264 + AAC
 - Renderer: `src/lyric_video.py`
-- Fonts: `assets/fonts/` (Anton is used by default; Bungee, BebasNeue, ArchivoBlack included)
+- Font: **Alex Brush** (OFL) with a faux-bold stroke (`BOLD_FRAC`), matched to the
+  reference's bold flowing brush-script style with swash capitals. Alternatives
+  (Playball, Pacifico, Great Vibes, Anton, Bungee…) are in `assets/fonts/`.
 
 ## Usage
 
