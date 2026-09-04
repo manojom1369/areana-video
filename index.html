@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10100f">
+  <title>YESHA — Kinetic lyric studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><span></span><span></span><span></span></div>
+        <div>
+          <p class="eyebrow">Motion study 01</p>
+          <h1>YESHA</h1>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-label"><span>01</span> Source</div>
+        <label class="upload-card" for="videoInput">
+          <input id="videoInput" type="file" accept="video/*">
+          <span class="upload-icon">↥</span>
+          <span class="upload-title" id="videoName">Drop the hero video</span>
+          <span class="upload-meta">MP4, MOV · 9:16 recommended</span>
+        </label>
+        <div class="asset-state" id="videoState"><i></i><span>Studio plate active</span></div>
+        <a class="source-link" href="https://we.tl/t-AOZUJ8RhV17NQKmC" target="_blank" rel="noreferrer">Open reference transfer <span>↗</span></a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-label"><span>02</span> Soundtrack</div>
+        <label class="upload-row" for="audioInput">
+          <input id="audioInput" type="file" accept="audio/*,video/*">
+          <span class="mini-icon">♫</span>
+          <span class="upload-title" id="audioName">Add song / audio</span>
+          <span class="upload-arrow">+</span>
+        </label>
+        <div class="asset-state muted" id="audioState"><i></i><span>Optional · not loaded</span></div>
+      </div>
+
+      <div class="sidebar-section lyrics-section">
+        <div class="section-label"><span>03</span> Lyrics</div>
+        <div class="lyrics-note"><span class="check">✓</span><span>Roman transliteration locked<br><b>5 beats · 22.4 seconds</b></span></div>
+        <div class="lyrics-mini" id="lyricsMini"></div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="export-note"><span class="pulse-dot"></span><span>Auto-save on</span><span class="shortcut">⌘ S</span></div>
+        <p class="sidebar-foot">A visualizer for Telugu folk rhythm.<br>Set your picture, then export.</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Projects</span><b>/</b><strong>Yesha — lyric film</strong></div>
+        <div class="top-actions">
+          <button class="text-button" id="resetBtn">Reset preview</button>
+          <button class="outline-button" id="shareBtn">Share setup <span>↗</span></button>
+          <button class="primary-button" id="exportBtn"><span class="export-glyph">↓</span> Export video</button>
+        </div>
+      </header>
+
+      <section class="stage-section">
+        <div class="stage-toolbar">
+          <div class="mode-switch" role="tablist" aria-label="Preview mode">
+            <button class="mode active" data-mode="preview" role="tab">Preview</button>
+            <button class="mode" data-mode="safe" role="tab">Safe area</button>
+          </div>
+          <div class="stage-stats"><span class="live-dot"></span> <span id="renderState">Live render</span><b>9:16</b><b>1080 × 1920</b></div>
+        </div>
+
+        <div class="stage-wrap">
+          <div class="stage-shadow"></div>
+          <div class="canvas-frame" id="canvasFrame">
+            <canvas id="previewCanvas" width="540" height="960" aria-label="Animated lyric preview"></canvas>
+            <div class="safe-guides" id="safeGuides"><span></span><span></span></div>
+            <div class="canvas-badge">YESHA <small>LYRIC FILM</small></div>
+          </div>
+          <div class="stage-side-note note-top"><span class="note-line"></span><span>Typography<br>follows the beat</span></div>
+          <div class="stage-side-note note-bottom"><span class="note-line"></span><span>Golden hour<br>grade / 01</span></div>
+        </div>
+
+        <div class="transport">
+          <button class="play-button" id="playBtn" aria-label="Play preview"><span class="play-icon"></span></button>
+          <span class="timecode" id="currentTime">00:00</span>
+          <div class="scrubber-wrap"><input id="scrubber" type="range" min="0" max="22.4" step="0.01" value="0" aria-label="Timeline"></div>
+          <span class="timecode muted-time" id="durationTime">00:22</span>
+          <button class="transport-button" id="loopBtn" aria-label="Loop playback">↻</button>
+          <button class="transport-button" id="muteBtn" aria-label="Mute audio">⌁</button>
+        </div>
+      </section>
+
+      <section class="inspector">
+        <div class="inspector-heading">
+          <div>
+            <p class="eyebrow">Design system</p>
+            <h2>Make the refrain move.</h2>
+          </div>
+          <p class="inspector-intro">A warm, editorial treatment built for vertical stories. Tune the mood without losing the pulse.</p>
+        </div>
+
+        <div class="control-grid">
+          <div class="control-card type-card">
+            <div class="card-top"><div><span class="card-index">A</span><span class="card-label">Letterform</span></div><span class="card-value" id="fontValue">Editorial</span></div>
+            <div class="font-preview" id="fontPreview">Yeshanagula</div>
+            <div class="segmented" id="fontPicker">
+              <button class="segment active" data-font="editorial">Editorial</button>
+              <button class="segment" data-font="modern">Modern</button>
+              <button class="segment" data-font="mono">Mono</button>
+            </div>
+            <label class="font-upload"><span>＋ Use attached font</span><input id="fontInput" type="file" accept=".ttf,.otf,.woff,.woff2"></label>
+          </div>
+
+          <div class="control-card color-card">
+            <div class="card-top"><div><span class="card-index">B</span><span class="card-label">Ink & light</span></div><span class="card-value" id="colorValue">Saffron</span></div>
+            <div class="swatches" id="colorPicker">
+              <button class="swatch saffron active" data-color="saffron" aria-label="Saffron gold"></button>
+              <button class="swatch pearl" data-color="pearl" aria-label="Pearl white"></button>
+              <button class="swatch coral" data-color="coral" aria-label="Coral"></button>
+              <button class="swatch mint" data-color="mint" aria-label="Mint"></button>
+            </div>
+            <div class="color-caption"><span class="color-chip saffron"></span><span>Light catches the downbeat</span><span class="arrow">→</span></div>
+          </div>
+
+          <div class="control-card motion-card">
+            <div class="card-top"><div><span class="card-index">C</span><span class="card-label">Entrance motion</span></div><span class="card-value" id="motionValue">Rise</span></div>
+            <div class="motion-list" id="motionPicker">
+              <button class="motion-option active" data-motion="rise"><span class="motion-symbol rise-symbol">↗</span><span>Rise</span><small>soft lift</small></button>
+              <button class="motion-option" data-motion="drift"><span class="motion-symbol drift-symbol">≈</span><span>Drift</span><small>weightless</small></button>
+              <button class="motion-option" data-motion="stamp"><span class="motion-symbol stamp-symbol">✦</span><span>Stamp</span><small>percussive</small></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-panel">
+          <div class="timeline-head"><div><p class="eyebrow">Beat map</p><h3>Refrain arrangement</h3></div><span class="bpm-pill">96 BPM · 4/4</span></div>
+          <div class="beat-ruler"><span>00:00</span><span>00:05</span><span>00:10</span><span>00:15</span><span>00:20</span></div>
+          <div class="beat-track" id="beatTrack"></div>
+          <div class="timeline-legend"><span><i class="legend-dot gold"></i> lead line</span><span><i class="legend-dot pale"></i> response</span><span><i class="legend-dot coral"></i> refrain</span><span class="timeline-hint">Drag the playhead above to inspect each phrase</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <div class="modal-backdrop" id="exportModal" hidden>
+    <div class="export-modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+      <button class="modal-close" id="closeModal" aria-label="Close">×</button>
+      <div class="modal-kicker"><span class="pulse-dot"></span> Render queue</div>
+      <h2 id="exportTitle">Your lyric film is ready to render.</h2>
+      <p id="exportMessage">Export uses the canvas preview at 30 frames per second. Add your source video and song in the left rail for the full picture lock.</p>
+      <div class="render-progress"><span id="renderProgress"></span></div>
+      <div class="modal-actions"><button class="outline-button" id="cancelExport">Not yet</button><button class="primary-button" id="startExport">Render WebM <span>↗</span></button></div>
+    </div>
+  </div>
+
+  <video id="sourceVideo" playsinline muted hidden></video>
+  <audio id="sourceAudio" hidden></audio>
+  <script src="app.js"></script>
+</body>
+</html>
