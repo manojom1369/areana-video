@@ -1,0 +1,14 @@
+# Yeshanagula — lyric lines (timings to be synced once audio is available)
+# format: line_id | text
+L01 | yesha yesha
+L02 | Yeshanagula kattameedha yeshina uyyala
+L03 | Manamvugudhame baala
+L04 | Yeshanagula kattameedha yeshina uyyala
+L05 | Manamvugudhame baala
+L06 | Yeshanagula kattameedha yeshanagula
+L07 | Yeshanagula kattameedha
+L08 | Yeshanagula kattameedha
+L09 | Yeshanagula kattameedha yeshina uyyala
+L10 | Manamvugudhame baala
+L11 | Yeshanagula kattameedha yeshina uyyala
+L12 | Manamvugudhame baala
